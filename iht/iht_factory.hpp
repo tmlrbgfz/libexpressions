@@ -29,6 +29,7 @@
 #include <type_traits>
 #include <vector>
 #include <algorithm>
+#include <mutex>
 
 namespace IHT {
     template<typename NodeType>
@@ -43,7 +44,7 @@ namespace IHT {
     private: //private members
         static std::unique_ptr<IHT::IHTFactory<NodeType>> singletonInstance;
 
-        std::unordered_map<IHT::hash_type, IHTWeakNodePtrContainer> nodes;
+        std::unordered_map<IHT::hash_type, std::tuple<std::mutex, IHTWeakNodePtrContainer>> nodes;
 
     public:
         static IHTFactory<NodeType> *get() {
@@ -84,10 +85,10 @@ namespace IHT {
         //node map
         auto const hash = node->hash();
         IHT::IHTNodePtr<NodeType> result;
-        auto &ptrs = nodes[hash];
+        auto &[mutex, ptrs] = nodes[hash];
         std::vector<typename IHT::IHTFactory<NodeType>::IHTWeakNodePtrContainer::iterator> toDelete;
         //Iterate all node pointers in the node map with the given hash
-        //TODO: shared lock here
+        std::unique_lock<std::mutex> lockForNodeContainer(mutex);
         for(typename IHT::IHTFactory<NodeType>::IHTWeakNodePtrContainer::iterator iter = ptrs.begin();
             iter != ptrs.end(); ++iter) {
             //Determine the shared pointer of the node
@@ -108,7 +109,6 @@ namespace IHT {
             }
         }
         //Erase all encountered weak pointers to destroyed nodes
-        //TODO: Exclusive lock here
         for(auto &iter : toDelete) {
             ptrs.erase(iter);
         }
@@ -117,7 +117,7 @@ namespace IHT {
         if(result == nullptr) {
             result.reset(node.release(), std::forward<Deleter>(deleter));
         }
-        nodes[hash].push_back(result);
+        ptrs.push_back(result);
         return result;
     }
 }
