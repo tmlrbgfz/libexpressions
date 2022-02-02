@@ -85,14 +85,11 @@ namespace libexpressions {
         template<typename ...Args>
         ExpressionNodePtr makeExpression(Args&&... args) {
             auto operandVector = getOperandVector(std::forward<Args>(args)...);
-            Expects(not operandVector.empty());
-            auto &front = operandVector.front();
             if(operandVector.size() == 1) {
-                return front;
+                return operandVector.front();
             } else {
-                decltype(operandVector) operands(operandVector.begin()+1, operandVector.end());
                 return std::static_pointer_cast<ExpressionNode const>(
-                    factory->createNode<Operator>(front, std::move(operands))
+                    factory->createNode<Operator>(std::move(operandVector))
                 );
             }
         }

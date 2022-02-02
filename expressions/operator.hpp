@@ -39,102 +39,18 @@ namespace libexpressions {
         friend class IHT::IHTFactory<ExpressionNode>;
     public:
         typedef libexpressions::OperandContainer OperandContainer;
-
-        class Iterator {
-        private:
-            Operator const *operatr;
-            size_t index;
-        public:
-            Iterator(Operator const *paramOperatr = nullptr, size_t paramIndex = 0)
-              : operatr(paramOperatr), index(paramIndex) {}
-            Iterator(Iterator const &) = default;
-            Iterator(Iterator &&) = default;
-            ~Iterator() = default;
-
-            Iterator operator++(int) {
-                return Iterator(operatr, index++);
-            }
-            Iterator& operator++() {
-                ++index;
-                return *this;
-            }
-            Iterator operator+(ssize_t offset) {
-                if(offset >= 0) {
-                    return Iterator(operatr, index+static_cast<size_t>(offset));
-                } else {
-                    auto negatedOffset = static_cast<size_t>(-offset);
-                    return Iterator(operatr, index - negatedOffset);
-                }
-            }
-            Iterator operator+(size_t offset) {
-                return Iterator(operatr, index+offset);
-            }
-            Iterator& operator+=(ssize_t offset) {
-                return *this = this->operator+(offset);
-            }
-            Iterator operator-(ssize_t offset) {
-                return this->operator+(-offset);
-            }
-            ssize_t operator-(Iterator const &other) {
-                return static_cast<ssize_t>(this->index - other.index);
-            }
-            Iterator operator-=(ssize_t offset) {
-                return *this = this->operator-(offset);
-            }
-            Iterator operator--(int) {
-                return Iterator(operatr, index--);
-            }
-            Iterator& operator--() {
-                --index;
-                return *this;
-            }
-            ExpressionNodePtr const &operator*() const {
-                if(index == 0) {
-                    return operatr->nodeOperator;
-                } else {
-                    return operatr->operands.at(index-1);
-                }
-            }
-            Iterator& operator=(Iterator const &other) {
-                operatr = other.operatr;
-                index = other.index;
-                return *this;
-            }
-
-            bool operator==(Iterator const &other) const {
-                return operatr == other.operatr and
-                       index == other.index;
-            }
-            bool operator!=(Iterator const &other) const {
-                return not (*this == other);
-            }
-
-            friend void swap(Iterator &iter1, Iterator &iter2) {
-                using namespace std;
-                swap(iter1.operatr, iter2.operatr);
-                swap(iter1.index, iter2.index);
-            }
-        public:
-            typedef ssize_t difference_type;
-            typedef ExpressionNodePtr value_type;
-            typedef void pointer;
-            typedef ExpressionNodePtr const& reference;
-            typedef std::random_access_iterator_tag iterator_category;
-        };
-
+        typedef OperandContainer::const_iterator Iterator;
         typedef size_t PathElement;
         typedef std::vector<PathElement> Path;
     private:
-        ExpressionNodePtr const nodeOperator;
         OperandContainer const operands;
         IHT::hash_type const hashCache;
     protected:
-        Operator(ExpressionNodePtr const &strOperator, OperandContainer &&paramOperands)
+        Operator(OperandContainer &&paramOperands)
             : ExpressionNode(ExpressionNodeKind::EXPRESSION_OPERATOR),
-              nodeOperator(strOperator),
               operands(std::move(paramOperands)),
               hashCache([this]() {
-                  size_t result = this->nodeOperator->hash();
+                  size_t result = 0;
                   size_t maxLowestByte = result & 0xFFu;
                   for(auto const &operand : this->operands) {
                       size_t opHash = operand->hash();
@@ -147,8 +63,12 @@ namespace libexpressions {
     public:
         ~Operator() = default;
 
+        size_t getSize() const {
+            return this->operands.size();
+        }
+
         ExpressionNodePtr const &getOperator() const {
-            return nodeOperator;
+            return this->operands.front();
         }
 
         OperandContainer const &getOperands() const {
@@ -160,9 +80,13 @@ namespace libexpressions {
         }
 
         std::string toString() const {
-            std::string result = "(" + nodeOperator->toString();
-            for(auto &operand : this->operands) {
-                result += std::string(" ") + operand->toString();
+            std::string result = "(";
+            if(this->operands.size() > 0) {
+                auto iter = this->operands.cbegin();
+                result += (*iter)->toString();
+                while(++iter != this->operands.cend()) {
+                    result += std::string(" ") + (*iter)->toString();
+                }
             }
             result += ")";
             return result;
@@ -177,7 +101,7 @@ namespace libexpressions {
                             return false;
                         }
                     }
-                    return this->nodeOperator->equal_to(op->nodeOperator.get());
+                    return true;
                 }
             }
             return false;
@@ -188,16 +112,16 @@ namespace libexpressions {
         }
 
         Iterator begin() const {
-            return Iterator(this, 0);
+            return this->operands.begin();
         }
         Iterator end() const {
-            return Iterator(this, operands.size()+1);
+            return this->operands.end();
         }
         Iterator cbegin() const {
-            return Iterator(this, 0);
+            return this->operands.cbegin();
         }
         Iterator cend() const {
-            return Iterator(this, operands.size()+1);
+            return this->operands.cend();
         }
 
     public:
@@ -208,12 +132,8 @@ namespace libexpressions {
                     return nullptr;
                 } else {
                     Operator const *op = llvm::dyn_cast<Operator const>(current.get());
-                    if(op->getOperands().size() <= *iter) {
-                        if(*iter == 0) {
-                            current = op->getOperator();
-                        } else {
-                            current = op->getOperands().at((*iter)-1);
-                        }
+                    if(op->getOperands().size() > *iter) {
+                        current = op->getOperands().at((*iter));
                     }
                 }
             }

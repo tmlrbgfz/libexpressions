@@ -46,7 +46,7 @@ libexpressions::ExpressionNodePtr generateExpressionFromAST(libexpressions::Expr
     };
     std::stack<State_t> state;
     state.push(EXPRESSION);
-    class OperandVisitor : public boost::static_visitor<> {
+    class OperandVisitor {
     private:
         std::stack<decltype(stOperators)::value_type> &operatorStack;
         std::stack<decltype(stAtoms)::value_type> &apStack;
@@ -86,25 +86,28 @@ libexpressions::ExpressionNodePtr generateExpressionFromAST(libexpressions::Expr
             stOperands.pop();
         } else if(state.top() == OPERATOR) {
             if(not buildingStack.top().empty()) {
-                libexpressions::ExpressionNodePtr name = std::move(buildingStack.top().top());
                 std::vector<libexpressions::ExpressionNodePtr> operands;
-                buildingStack.top().pop();
                 for(size_t num = stOperators.top().operands.size(); num > 0; --num) {
                     operands.push_back(std::move(buildingStack.top().top()));
                     buildingStack.top().pop();
                 }
                 buildingStack.pop();
-                buildingStack.top().push(factory->makeExpression(std::move(name), operands.begin(), operands.end()));
+                buildingStack.top().push(factory->makeExpression(operands.begin(), operands.end()));
                 stOperators.pop();
                 state.pop(); //Pop OPERATOR
             } else {
-                state.push(OPERAND);
-                stOperands.push(stOperators.top().thisOperator.get());
-                for(auto iter = stOperators.top().operands.begin();
-                    iter != stOperators.top().operands.end();
-                    ++iter) {
-                    state.push(OPERAND);
-                    stOperands.push(*iter);
+                if(stOperators.top().operands.empty()) {
+                    buildingStack.pop();
+                    buildingStack.top().push(factory->makeExpression());
+                    stOperators.pop();
+                    state.pop(); //Pop OPERATOR
+                } else {
+                    for(auto iter = stOperators.top().operands.begin();
+                        iter != stOperators.top().operands.end();
+                        ++iter) {
+                        state.push(OPERAND);
+                        stOperands.push(*iter);
+                    }
                 }
             }
         } else if(state.top() == ATOM) {
@@ -175,9 +178,6 @@ Expression<std::string>   generateASTFromExpression(libexpressions::ExpressionNo
             libexpressions::Operator const &op = *std::static_pointer_cast<libexpressions::Operator const>(decompositionStack.top());
             if(!stOperands.empty() && !stOperands.top().empty()) {
                 stOperators.emplace(Operator<std::string>());
-                stOperators.top().thisOperator = stOperands.top().top();
-                stOperands.top().pop();
-                //for(size_t i = 0; i < op.getOperands().size(); ++i) {
                 while(!stOperands.top().empty()) {
                     stOperators.top().operands.push_back(stOperands.top().top());
                     stOperands.top().pop();
@@ -187,12 +187,9 @@ Expression<std::string>   generateASTFromExpression(libexpressions::ExpressionNo
                 decompositionStack.pop();
             } else {
                 state.push(OPERAND);
-                decompositionStack.push(op.getOperator());
-                for(auto iter = op.getOperands().begin();
-                    iter != op.getOperands().end();
-                    ++iter) {
+                for(auto const &operand : op) {
                     state.push(OPERAND);
-                    decompositionStack.push(*iter);
+                    decompositionStack.push(operand);
                 }
             }
         } else if(state.top() == ATOM) {

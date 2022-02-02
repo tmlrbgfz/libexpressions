@@ -77,13 +77,12 @@ struct SExpressionQIGrammar : boost::spirit::qi::grammar<Iterator, Expression<T>
         std::string const apCharacterClass = "_a-zA-Z!%&/=?+*<>@.,0-9'";
         ruleAtomicProposition = qi::lexeme[ +(spirit::ascii::char_(apCharacterClass) | spirit::ascii::char_('-')) ];
 
-        ruleUnit %= qi::lexeme[ spirit::ascii::char_('(') >> spirit::ascii::char_(')') ];
         ruleUnbracketedOperand %= ruleAtomicProposition;
-        ruleBracketedOperand %= (qi::lit('(') >> (ruleOperator | ruleOperand) >> qi::lit(')'));
-        ruleOperand %= (ruleUnit | ruleBracketedOperand | ruleUnbracketedOperand);
-        ruleOperandList %= +(ruleOperand);
+        ruleBracketedOperand %= (qi::lit('(') >> ruleOperator >> qi::lit(')'));
+        ruleOperand %= (ruleBracketedOperand | ruleUnbracketedOperand);
+        ruleOperandList %= *(ruleOperand);
         ruleOperator %= (
-                          ruleOperand >> ruleOperandList
+                          ruleOperandList
                         );
         ruleExpression %= eps > ruleOperand;
 
@@ -104,11 +103,10 @@ struct SExpressionQIGrammar : boost::spirit::qi::grammar<Iterator, Expression<T>
         installErrorHandler(ruleExpression, "failed to match expression");
     }
 
-    boost::spirit::qi::rule<Iterator, AtomicProposition<T>(), boost::spirit::ascii::space_type> ruleUnit;
     boost::spirit::qi::rule<Iterator, AtomicProposition<T>(), boost::spirit::ascii::space_type> ruleAtomicProposition;
     boost::spirit::qi::rule<Iterator, struct Operator_t<T>(), boost::spirit::ascii::space_type> ruleOperator;
-    boost::spirit::qi::rule<Iterator, Operand<T>(), boost::spirit::ascii::space_type> ruleBracketedOperand;
-    boost::spirit::qi::rule<Iterator, Operand<T>(), boost::spirit::ascii::space_type> ruleUnbracketedOperand;
+    boost::spirit::qi::rule<Iterator, Operator<T>(), boost::spirit::ascii::space_type> ruleBracketedOperand;
+    boost::spirit::qi::rule<Iterator, AtomicProposition<T>(), boost::spirit::ascii::space_type> ruleUnbracketedOperand;
     boost::spirit::qi::rule<Iterator, Operand<T>(), boost::spirit::ascii::space_type> ruleOperand;
     boost::spirit::qi::rule<Iterator, std::vector<Operand<T>>(), boost::spirit::ascii::space_type> ruleOperandList;
     boost::spirit::qi::rule<Iterator, Expression<T>(), boost::spirit::ascii::space_type> ruleExpression;
@@ -124,6 +122,20 @@ struct extract_from_attribute<Operator<T>, struct Operator_t<T>>
     template <typename Context>
     static type call(Operator<T> const& attr, Context& /*context*/) {
         return attr.value();
+    }
+};
+template<typename T>
+struct assign_to_attribute_from_value<Operator<T>, Operand<T>>
+{
+    static void call(Operand<T> const &val, Operator<T> &attr) {
+        attr = std::get<Operator<T>>(val);
+    }
+};
+template<typename T>
+struct assign_to_attribute_from_value<Operator<T>, std::vector<Operand<T>>>
+{
+    static void call(std::vector<Operand<T>> const &val, Operator<T> &attr) {
+        attr.operands = val;
     }
 };
 template<typename T>
@@ -147,31 +159,13 @@ struct extract_from_attribute<Operand<T>, AtomicProposition<T>>
     }
 };
 template<typename T>
-struct extract_from_attribute<OperandWrapper<T>, Operand<T>>
+struct extract_from_attribute<Operator<T>, std::vector<Operand<T>>>
 {
-    typedef Operand<T> const &type;
-
+    typedef std::vector<Operand<T>> const &type;
+    
     template <typename Context>
-    static type call(OperandWrapper<T> const& attr, Context& /*context*/) {
-        return attr.get();
-    }
-};
-template<typename T>
-struct extract_from_attribute<OperandWrapper<T>, boost::variant<AtomicProposition<T>, Operator<T>>>
-{
-    typedef boost::variant<AtomicProposition<T>, Operator<T>> type;
-
-    template <typename Context>
-    static type call(OperandWrapper<T> const& attr, Context& /*context*/) {
-        type result;
-        struct visitor_t{
-            type &result;
-            visitor_t(type &paramResult) : result(paramResult) {}
-            void operator()(AtomicProposition<T> const &t) { result = t; }
-            void operator()(Operator<T> const &u) { result = u; }
-        } visitor(result);
-        std::visit(visitor, attr.get());
-        return result;
+    static type call(Operator<T> const &attr, Context& /*context*/) {
+        return attr.operands;
     }
 };
 template<typename T>
@@ -223,13 +217,10 @@ struct SExpressionKarmaGrammar : boost::spirit::karma::grammar<Iterator, Express
         std::string const apCharacterClass = "_a-zA-Z!%&/=?+*<>@.,0-9-";
         ruleAtomicProposition = +(spirit::ascii::char_(apCharacterClass));
 
-        ruleOperand %= (ruleAtomicProposition | ruleOperatorOpt);
+        ruleOperand %= (ruleAtomicProposition | ruleOperator);
         ruleOperandList %= ruleOperand % karma::lit(' ');
-        ruleOperatorOpt %= (
-                             karma::lit('(') << -ruleOperator << karma::lit(')')
-                           );
         ruleOperator %= (
-                          ruleOperand << karma::lit(' ') << ruleOperandList
+                          karma::lit('(') << ruleOperandList << karma::lit(')')
                         );
         ruleExpression %= ruleOperand;
 
@@ -243,10 +234,9 @@ struct SExpressionKarmaGrammar : boost::spirit::karma::grammar<Iterator, Express
     }
 
     boost::spirit::karma::rule<Iterator, AtomicProposition<T>()> ruleAtomicProposition;
-    boost::spirit::karma::rule<Iterator, Operator<T>()> ruleOperatorOpt;
-    boost::spirit::karma::rule<Iterator, struct Operator_t<T>()> ruleOperator;
-    boost::spirit::karma::rule<Iterator, boost::variant<AtomicProposition<T>, Operator<T>>()> ruleOperand;
-    boost::spirit::karma::rule<Iterator, std::vector<boost::variant<AtomicProposition<T>, Operator<T>>>()> ruleOperandList;
+    boost::spirit::karma::rule<Iterator, Operator<T>()> ruleOperator;
+    boost::spirit::karma::rule<Iterator, Operand<T>()> ruleOperand;
+    boost::spirit::karma::rule<Iterator, std::vector<Operand<T>>()> ruleOperandList;
     boost::spirit::karma::rule<Iterator, Expression<T>()> ruleExpression;
 };
 

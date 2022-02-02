@@ -23,22 +23,20 @@
 #ifndef __LIBEXPRESSIONS_AST__
 #define __LIBEXPRESSIONS_AST__
 
-#include <boost/variant.hpp>
-#include <boost/fusion/include/adapt_struct.hpp>
 #include <string>
 #include <vector>
 #include <variant>
-#include <optional>
 
-#include <boost/variant/recursive_wrapper.hpp>
+//#include <boost/fusion/include/adapt_struct.hpp>
+//#include <boost/variant/recursive_wrapper.hpp>
 
 namespace libexpressions::parsers {
 
 template<typename T>
-struct Operator_t;
+using AtomicProposition = T;
 
 template<typename T>
-using AtomicProposition = T;
+struct Operator_t;
 
 template<typename T>
 using Operator = struct Operator_t<T>;
@@ -47,25 +45,21 @@ template<typename T>
 using Operand = std::variant<AtomicProposition<T>, Operator<T>>;
 
 template<typename T>
-using OperandWrapper = boost::recursive_wrapper<Operand<T>>;
+struct Operator_t {
+    std::vector<Operand<T>> operands;
+};
 
 template<typename T>
 using Expression = Operand<T>;
 
-template<typename T>
-struct Operator_t {
-    OperandWrapper<T> thisOperator;
-    std::vector<Operand<T>> operands;
-};
-
 }
 
-BOOST_FUSION_ADAPT_TPL_STRUCT(
-    (T),
-    (struct libexpressions::parsers::Operator_t)(T),
-    (libexpressions::parsers::OperandWrapper<T>, thisOperator)
-    (std::vector<libexpressions::parsers::Operand<T>>, operands)
-)
+// BOOST_FUSION_ADAPT_TPL_STRUCT(
+//     (T),
+//     (struct libexpressions::parsers::Operator_t)(T),
+//     (libexpressions::parsers::OperandWrapper<T>, thisOperator)
+//     (std::vector<libexpressions::parsers::Operand<T>>, operands)
+// )
 
 #endif //__LIBEXPRESSIONS_AST__
 
