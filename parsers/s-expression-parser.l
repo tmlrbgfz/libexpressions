@@ -20,16 +20,49 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#pragma once
 
-#include <string>
-#include "libexpressions/expressions/expression_node.hpp"
+/* s-expression lexer */
 
-namespace libexpressions {
-    class ExpressionFactory;
-    namespace parsers {
-        libexpressions::ExpressionNodePtr generateExpressionFromAST(libexpressions::ExpressionFactory *factory, libexpressions::parsers::Expression<std::string>   const &exp);
-        libexpressions::parsers::Expression<std::string> generateASTFromExpression(libexpressions::ExpressionNodePtr const &exp);
-    }
+%{
+
+#include "libexpressions/parsers/ast.hpp"
+#include "libexpressions/parsers/ASTConversion.hpp"
+#include "libexpressions/parsers/s-expression-parser.hpp"
+#include "s-expression-parser.tab.hpp"
+extern std::vector<libexpressions::parsers::Operator<std::string>> result;
+
+#define YY_DECL int yylex(void)
+extern "C" YY_DECL;
+
+%}
+
+/* Options */
+%option nomain
+%option noyywrap
+%option nounput
+
+/* Regexes */
+
+IDENTIFIER [_a-zA-Z!%&/=?+*<>@.,0-9'\-]+
+WHITESPACE [ \t\n]+
+
+%%
+
+{IDENTIFIER} { yylval.atom = new libexpressions::parsers::AtomicProposition<std::string>(std::string(yytext, yyleng)); return IDENTIFIER; }
+{WHITESPACE} { }
+. { return static_cast<unsigned char>(*yytext); }
+
+%%
+
+namespace libexpressions::parsers {
+
+libexpressions::ExpressionNodePtr parseSExpression(libexpressions::ExpressionFactory *factory, std::string const &input) {
+		auto buffer = yy_scan_string(input.c_str());
+		yyparse();
+		yy_delete_buffer(buffer);
+		yylex_destroy();
+    return generateExpressionFromAST(factory, result.front());
+}
+
 }
 

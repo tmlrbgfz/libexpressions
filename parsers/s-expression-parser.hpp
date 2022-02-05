@@ -27,8 +27,10 @@
 
 namespace libexpressions {
     class ExpressionFactory;
-}
 
-libexpressions::ExpressionNodePtr parseSExpression(libexpressions::ExpressionFactory *factory, std::string const &str);
-std::string generateSExpression(libexpressions::ExpressionNodePtr const &exp);
+    namespace parsers {
+        libexpressions::ExpressionNodePtr parseSExpression(libexpressions::ExpressionFactory *factory, std::string const &str);
+        std::string generateSExpression(libexpressions::ExpressionNodePtr const &exp);
+    }
+}
 

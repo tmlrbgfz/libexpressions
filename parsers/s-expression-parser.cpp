@@ -51,67 +51,6 @@
 
 using namespace libexpressions::parsers;
 
-template<typename Iterator, typename ...Args>
-void installErrorHandler(boost::spirit::qi::rule<Iterator, Args...> &rule, std::string const &errorString) {
-    using boost::spirit::info;
-    typedef boost::spirit::qi::rule<Iterator, Args...> rule_type;
-    typedef typename rule_type::context_type Context;
-    typedef boost::fusion::vector<Iterator, Iterator const&, Iterator const&, info const&> ArgType;
-    auto errorHandler = [errorString](ArgType const &args, Context const &/*context*/, boost::spirit::qi::error_handler_result &result){
-        std::string remainder(boost::fusion::at_c<2>(args), boost::fusion::at_c<1>(args));
-        std::cout << errorString << ": Expecting " << boost::fusion::at_c<3>(args) << " " << remainder << std::endl;
-        result = boost::spirit::qi::fail;
-    };
-
-    boost::spirit::qi::on_error<boost::spirit::qi::fail>(rule, errorHandler);
-}
-
-template<typename Iterator, typename T>
-struct SExpressionQIGrammar : boost::spirit::qi::grammar<Iterator, Expression<T>(), boost::spirit::ascii::space_type> {
-    SExpressionQIGrammar() : SExpressionQIGrammar::base_type(ruleExpression) {
-        namespace qi = boost::spirit::qi;
-        namespace spirit = boost::spirit;
-        using boost::spirit::qi::eps;
-        
-        //std::string const apCharacterClass = "_a-zA-Z!%&/=?+*@<>.,0-9-";
-        std::string const apCharacterClass = "_a-zA-Z!%&/=?+*<>@.,0-9'";
-        ruleAtomicProposition = qi::lexeme[ +(spirit::ascii::char_(apCharacterClass) | spirit::ascii::char_('-')) ];
-
-        ruleUnbracketedOperand %= ruleAtomicProposition;
-        ruleBracketedOperand %= (qi::lit('(') >> ruleOperator >> qi::lit(')'));
-        ruleOperand %= (ruleBracketedOperand | ruleUnbracketedOperand);
-        ruleOperandList %= *(ruleOperand);
-        ruleOperator %= (
-                          ruleOperandList
-                        );
-        ruleExpression %= eps > ruleOperand;
-
-        ruleAtomicProposition.name("AtomicProposition");
-        ruleUnbracketedOperand.name("UnbracketedOperand");
-        ruleBracketedOperand.name("BracketedOperand");
-        ruleOperand.name("Operand");
-        ruleOperandList.name("OperandList");
-        ruleOperator.name("Operator");
-        ruleExpression.name("Expression");
-
-        installErrorHandler(ruleAtomicProposition, "failed to match atomic proposition");
-        installErrorHandler(ruleOperator, "failed to match operator");
-        installErrorHandler(ruleBracketedOperand, "failed to match bracketed operand");
-        installErrorHandler(ruleUnbracketedOperand, "failed to match unbracketed operand");
-        installErrorHandler(ruleOperand, "failed to match operand");
-        installErrorHandler(ruleOperandList, "failed to match operand list");
-        installErrorHandler(ruleExpression, "failed to match expression");
-    }
-
-    boost::spirit::qi::rule<Iterator, AtomicProposition<T>(), boost::spirit::ascii::space_type> ruleAtomicProposition;
-    boost::spirit::qi::rule<Iterator, struct Operator_t<T>(), boost::spirit::ascii::space_type> ruleOperator;
-    boost::spirit::qi::rule<Iterator, Operator<T>(), boost::spirit::ascii::space_type> ruleBracketedOperand;
-    boost::spirit::qi::rule<Iterator, AtomicProposition<T>(), boost::spirit::ascii::space_type> ruleUnbracketedOperand;
-    boost::spirit::qi::rule<Iterator, Operand<T>(), boost::spirit::ascii::space_type> ruleOperand;
-    boost::spirit::qi::rule<Iterator, std::vector<Operand<T>>(), boost::spirit::ascii::space_type> ruleOperandList;
-    boost::spirit::qi::rule<Iterator, Expression<T>(), boost::spirit::ascii::space_type> ruleExpression;
-};
-
 namespace boost::spirit::traits {
 
 template<typename T>
@@ -239,23 +178,6 @@ struct SExpressionKarmaGrammar : boost::spirit::karma::grammar<Iterator, Express
     boost::spirit::karma::rule<Iterator, std::vector<Operand<T>>()> ruleOperandList;
     boost::spirit::karma::rule<Iterator, Expression<T>()> ruleExpression;
 };
-
-libexpressions::ExpressionNodePtr parseSExpression(libexpressions::ExpressionFactory *factory, std::string const &str) {
-    SExpressionQIGrammar<std::string::const_iterator, std::string> grammar;
-    auto first = str.cbegin();
-    Expression<std::string> expression;
-    bool r = boost::spirit::qi::phrase_parse(
-                first,
-                str.cend(),
-                grammar,
-                boost::spirit::ascii::space,
-                expression
-             );
-    if(r) {
-        return generateExpressionFromAST(factory, expression);
-    }
-    return nullptr;
-}
 
 std::string generateSExpression(libexpressions::ExpressionNodePtr const &exp) {
     SExpressionKarmaGrammar<std::back_insert_iterator<std::string>, std::string> grammar;
