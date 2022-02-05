@@ -22,16 +22,6 @@
  */
 #include "libexpressions/parsers/s-expression-parser.hpp"
 
-#include <boost/spirit/include/qi_grammar.hpp>
-#include <boost/spirit/include/qi_alternative.hpp>
-#include <boost/spirit/include/qi_sequence.hpp>
-#include <boost/spirit/include/qi_expect.hpp>
-#include <boost/spirit/include/qi_plus.hpp>
-#include <boost/spirit/include/qi_optional.hpp>
-#include <boost/spirit/include/qi_lexeme.hpp>
-#include <boost/spirit/include/qi_lit.hpp>
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/qi_auto.hpp>
 #include <boost/spirit/include/support_info.hpp>
 
 #include <boost/spirit/include/karma_grammar.hpp>
