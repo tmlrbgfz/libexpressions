@@ -40,6 +40,7 @@ extern "C" YY_DECL;
 %option nomain
 %option noyywrap
 %option nounput
+%option noinput
 
 /* Regexes */
 
