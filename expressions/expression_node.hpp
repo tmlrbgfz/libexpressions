@@ -28,6 +28,7 @@
 #include "libexpressions/expressions/expression_visitor.hpp"
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace libexpressions {
     class ExpressionNode : public IHT::IHTNode<ExpressionNode> {
