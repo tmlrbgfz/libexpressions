@@ -26,9 +26,6 @@
 #include <vector>
 #include <variant>
 
-//#include <boost/fusion/include/adapt_struct.hpp>
-//#include <boost/variant/recursive_wrapper.hpp>
-
 namespace libexpressions::parsers {
 
 template<typename T>
@@ -52,11 +49,4 @@ template<typename T>
 using Expression = Operand<T>;
 
 }
-
-// BOOST_FUSION_ADAPT_TPL_STRUCT(
-//     (T),
-//     (struct libexpressions::parsers::Operator_t)(T),
-//     (libexpressions::parsers::OperandWrapper<T>, thisOperator)
-//     (std::vector<libexpressions::parsers::Operand<T>>, operands)
-// )
 
