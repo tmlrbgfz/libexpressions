@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_VARIADIC_TYPE_HELPER__
-#define __LIBEXPRESSIONS_VARIADIC_TYPE_HELPER__
+#pragma once
 
 //Inspired by
 //https://stackoverflow.com/questions/4691657/is-it-possible-to-store-a-template-parameter-pack-without-expanding-it
@@ -30,6 +29,4 @@ template<class T, typename ... Args>
 struct variadic_helper_type {
     typedef T<Args...> type;
 };
-
-#endif //__LIBEXPRESSIONS_VARIADIC_TYPE_HELPER__
 

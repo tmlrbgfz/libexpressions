@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_MATCHERS__
-#define __LIBEXPRESSIONS_MATCHERS__
+#pragma once
 
 #include <functional>
 #include <memory>
@@ -126,4 +125,3 @@ namespace libexpressions {
     }
 }
 
-#endif //__LIBEXPRESSIONS_MATCHERS__

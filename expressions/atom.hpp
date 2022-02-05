@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_ATOM__
-#define __LIBEXPRESSIONS_ATOM__
+#pragma once
 
 #include "libexpressions/expressions/expression_node.hpp"
 
@@ -71,6 +70,4 @@ namespace libexpressions {
 
     typedef std::shared_ptr<Atom> ExpressionAtomPtr;
 }
-
-#endif //__LIBEXPRESSIONS_ATOM__
 

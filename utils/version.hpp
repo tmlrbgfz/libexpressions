@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_VERSION__
-#define __LIBEXPRESSIONS_VERSION__
+#pragma once
 
 namespace libexpressions {
 
@@ -34,6 +33,4 @@ struct {
 };
 
 }
-
-#endif //__LIBEXPRESSIONS_VERSION__
 

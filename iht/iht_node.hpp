@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __IHT_IHT_NODE__
-#define __IHT_IHT_NODE__
+#pragma once
 
 #include <cstddef>
 
@@ -92,6 +91,4 @@ namespace std {
         }
     };
 }
-
-#endif //__IHT_IHT_NODE__
 

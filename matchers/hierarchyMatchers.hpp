@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_HIERARCHYMATCHERS__
-#define __LIBEXPRESSIONS_HIERARCHYMATCHERS__
+#pragma once
 
 #include "matchers/matchers.hpp"
 #include "matchers/matcherConnectives.hpp"
@@ -111,4 +110,3 @@ namespace libexpressions::Matchers {
     DescendantProperty HasDescendant;
 }
 
-#endif //__LIBEXPRESSIONS_HIERARCHYMATCHERS__

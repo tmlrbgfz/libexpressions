@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_EXPRESSION_NODE__
-#define __LIBEXPRESSIONS_EXPRESSION_NODE__
+#pragma once
 
 #include "libexpressions/iht/iht_node.hpp"
 #include "libexpressions/expressions/expression_node_kind.hpp"
@@ -62,6 +61,4 @@ namespace libexpressions {
 
     typedef std::vector<ExpressionNodePtr> ExpressionNodePtrContainer;
 }
-
-#endif //__LIBEXPRESSIONS_EXPRESSION_NODE__
 

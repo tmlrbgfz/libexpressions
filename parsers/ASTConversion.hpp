@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_ASTCONVERSION__
-#define __LIBEXPRESSIONS_ASTCONVERSION__
+#pragma once
 
 #include <string>
 #include "libexpressions/expressions/expression_node.hpp"
@@ -33,4 +32,3 @@ libexpressions::parsers::Expression<std::string> generateASTFromExpression(libex
 
 }
 
-#endif //__LIBEXPRESSIONS_ASTCONVERSION__

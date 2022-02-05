@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_VARIADIC_INSERT__
-#define __LIBEXPRESSIONS_VARIADIC_INSERT__
+#pragma once
 
 template<class InsertIterator, typename T>
 void insert(InsertIterator inserter, T &&arg1) {
@@ -33,4 +32,3 @@ void insert(InsertIterator inserter, T &&arg1, Args&&... args) {
     insert(inserter, std::forward<Args>(args)...);
 }
 
-#endif //__LIBEXPRESSIONS_VARIADIC_INSERT__

@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_MATCHERCONNECTIVES__
-#define __LIBEXPRESSIONS_MATCHERCONNECTIVES__
+#pragma once
 
 #include <algorithm>
 #include "matchers/matchers.hpp"
@@ -99,4 +98,3 @@ namespace libexpressions::Matchers {
     MatcherNegation Not;
 }
 
-#endif //__LIBEXPRESSIONS_MATCHERCONNECTIVES__

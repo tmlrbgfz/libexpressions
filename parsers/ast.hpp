@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_AST__
-#define __LIBEXPRESSIONS_AST__
+#pragma once
 
 #include <string>
 #include <vector>
@@ -60,6 +59,4 @@ using Expression = Operand<T>;
 //     (libexpressions::parsers::OperandWrapper<T>, thisOperator)
 //     (std::vector<libexpressions::parsers::Operand<T>>, operands)
 // )
-
-#endif //__LIBEXPRESSIONS_AST__
 

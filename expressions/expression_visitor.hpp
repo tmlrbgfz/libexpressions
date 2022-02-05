@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_EXPRESSIONVISITOR__
-#define __LIBEXPRESSIONS_EXPRESSIONVISITOR__
+#pragma once
 
 #include "libexpressions/expressions/expression_node_kind.hpp"
 
@@ -43,6 +42,4 @@ namespace libexpressions {
         void visit(libexpressions::Operator const &)        { };
     };
 }
-
-#endif //__LIBEXPRESSIONS_EXPRESSIONVISITOR__
 

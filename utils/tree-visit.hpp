@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_TREE_VISIT__
-#define __LIBEXPRESSIONS_TREE_VISIT__
+#pragma once
 
 #include <tuple>
 #include <vector>
@@ -155,6 +154,4 @@ void traverseTree(ChildIteratorGetterFunction &&childGetter,
         }
     }
 }
-
-#endif //__LIBEXPRESSIONS_TREE_VISIT__
 

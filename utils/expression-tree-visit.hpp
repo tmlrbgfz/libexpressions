@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_EXPRESSION_TREE_VISIT__
-#define __LIBEXPRESSIONS_EXPRESSION_TREE_VISIT__
+#pragma once
 
 #include <iterator>
 
@@ -36,6 +35,4 @@ size_t getChildNodeIndex(libexpressions::ExpressionNodePtr const *parent, libexp
     Expects(op->end() != iter); // We expect to find some child equal to ptr
     return static_cast<size_t>(std::distance(op->begin(), iter));
 }
-
-#endif //__LIBEXPRESSIONS_EXPRESSION_TREE_VISIT__
 

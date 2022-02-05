@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __IHT_IHT_FACTORY__
-#define __IHT_IHT_FACTORY__
+#pragma once
 
 #include "libexpressions/iht/iht_node.hpp"
 #include <unordered_map>
@@ -121,6 +120,4 @@ namespace IHT {
         return result;
     }
 }
-
-#endif //__IHT_IHT_FACTORY__
 

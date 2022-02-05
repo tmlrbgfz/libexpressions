@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_OPERATOR__
-#define __LIBEXPRESSIONS_OPERATOR__
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -143,6 +142,4 @@ namespace libexpressions {
 
     typedef std::shared_ptr<Operator> OperatorPtr;
 }
-
-#endif //__LIBEXPRESSIONS_OPERATOR__
 

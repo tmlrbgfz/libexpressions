@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_PREDICATEMATCHER__
-#define __LIBEXPRESSIONS_PREDICATEMATCHER__
+#pragma once
 
 #include <functional>
 
@@ -67,4 +66,3 @@ namespace libexpressions::Matchers {
     }
 }
 
-#endif //__LIBEXPRESSIONS_PREDICATEMATCHER__

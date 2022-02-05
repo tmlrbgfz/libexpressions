@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_SEXPRESSIONPARSER__
-#define __LIBEXPRESSIONS_SEXPRESSIONPARSER__
+#pragma once
 
 #include <string>
 #include "libexpressions/expressions/expression_node.hpp"
@@ -33,4 +32,3 @@ namespace libexpressions {
 libexpressions::ExpressionNodePtr parseSExpression(libexpressions::ExpressionFactory *factory, std::string const &str);
 std::string generateSExpression(libexpressions::ExpressionNodePtr const &exp);
 
-#endif //__LIBEXPRESSIONS_SEXPRESSIONPARSER__

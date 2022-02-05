@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __LIBEXPRESSIONS_EXPRESSION_KIND__
-#define __LIBEXPRESSIONS_EXPRESSION_KIND__
+#pragma once
 
 namespace libexpressions {
 
@@ -33,6 +32,4 @@ enum class ExpressionNodeKind {
 };
 
 }
-
-#endif //__LIBEXPRESSIONS_EXPRESSION_KIND__
 

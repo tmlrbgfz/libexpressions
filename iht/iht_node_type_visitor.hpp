@@ -20,8 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __IHT_NODE_TYPE_VISITOR__
-#define __IHT_NODE_TYPE_VISITOR__
+#pragma once
 
 #include <type_traits>
 #include <gsl/gsl_assert>
@@ -49,4 +48,3 @@ namespace IHT {
     auto visit(Fn &&f, NodeType const *node) -> typename std::result_of<Fn(NodeType const *)>::type;
 }
 
-#endif //__IHT_NODE_TYPE_VISITOR__
