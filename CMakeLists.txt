@@ -35,4 +35,5 @@ target_link_libraries(expressions
         libexpressions_iht
         libexpressions_matchers
         libexpressions_parsers
+        libexpressions_parsers_sexpressions
         libexpressions_utils)

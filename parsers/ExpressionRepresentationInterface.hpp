@@ -1,4 +1,5 @@
-/* MIT License
+/* 
+ * MIT License
  * 
  * Copyright (c) 2022 Niklas Krafczyk
  * 
@@ -23,37 +24,18 @@
 #pragma once
 
 #include <string>
-#include <vector>
-#include <variant>
+
+#include "libexpressions/parsers/ast.hpp"
 
 namespace libexpressions::parsers {
 
-template<typename T>
-using AtomicProposition = T;
+class ExpressionRepresentationInterface {
+public:
+    virtual ~ExpressionRepresentationInterface() { };
 
-template<typename T>
-struct Operator_t;
-
-template<typename T>
-using Operator = struct Operator_t<T>;
-
-template<typename T>
-using Operand = std::variant<AtomicProposition<T>, Operator<T>>;
-
-template<typename T>
-struct Operator_t {
-    std::vector<Operand<T>> operands;
-
-    bool operator==(struct Operator_t<T> const &other) const {
-        return this->operands == other.operands;
-    }
+    virtual libexpressions::parsers::ExpressionList<std::string> stringToExpressionList(std::string const&) const = 0;
+    virtual std::string expressionListToString(libexpressions::parsers::ExpressionList<std::string> const&) const = 0;
 };
-
-template<typename T>
-using Expression = Operator<T>;
-
-template<typename T>
-using ExpressionList = std::vector<Expression<T>>;
 
 }
 

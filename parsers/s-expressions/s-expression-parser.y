@@ -28,7 +28,7 @@
 #include <stdexcept>
 #include "libexpressions/parsers/ast.hpp"
 
-std::vector<libexpressions::parsers::Operator<std::string>> result;
+libexpressions::parsers::ExpressionList<std::string> result;
 
 void yyerror(char const*);
 extern "C" int yylex(void);

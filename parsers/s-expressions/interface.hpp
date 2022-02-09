@@ -23,14 +23,16 @@
 #pragma once
 
 #include <string>
-#include "libexpressions/expressions/expression_node.hpp"
 
-namespace libexpressions {
-    class ExpressionFactory;
+#include "libexpressions/parsers/ExpressionRepresentationInterface.hpp"
 
-    namespace parsers {
-        libexpressions::ExpressionNodePtr parseSExpression(libexpressions::ExpressionFactory *factory, std::string const &str);
-        std::string generateSExpression(libexpressions::ExpressionNodePtr const &exp);
-    }
+namespace libexpressions::parsers {
+    class SExpressionRepresentationInterface : public ExpressionRepresentationInterface {
+        public:
+        ~SExpressionRepresentationInterface() override;
+
+        libexpressions::parsers::ExpressionList<std::string> stringToExpressionList(std::string const&) const override;
+        std::string expressionListToString(libexpressions::parsers::ExpressionList<std::string> const&) const override;
+    };
 }
 

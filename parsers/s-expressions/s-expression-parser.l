@@ -20,40 +20,50 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#pragma once
 
-#include <string>
-#include <vector>
-#include <variant>
+/* s-expression lexer */
+
+%{
+
+#include "libexpressions/parsers/ast.hpp"
+#include "libexpressions/parsers/ASTConversion.hpp"
+#include "libexpressions/parsers/s-expressions/s-expression-parser.hpp"
+#include "s-expression-parser.tab.hpp"
+extern libexpressions::parsers::ExpressionList<std::string> result;
+
+#define YY_DECL int yylex(void)
+extern "C" YY_DECL;
+
+%}
+
+/* Options */
+%option nomain
+%option noyywrap
+%option nounput
+%option noinput
+
+/* Regexes */
+
+IDENTIFIER [_a-zA-Z!%&/=?+*<>@.,0-9'\-]+
+WHITESPACE [ \t\n]+
+
+%%
+
+{IDENTIFIER} { yylval.atom = new libexpressions::parsers::AtomicProposition<std::string>(std::string(yytext, yyleng)); return IDENTIFIER; }
+{WHITESPACE} { }
+. { return static_cast<unsigned char>(*yytext); }
+
+%%
 
 namespace libexpressions::parsers {
 
-template<typename T>
-using AtomicProposition = T;
-
-template<typename T>
-struct Operator_t;
-
-template<typename T>
-using Operator = struct Operator_t<T>;
-
-template<typename T>
-using Operand = std::variant<AtomicProposition<T>, Operator<T>>;
-
-template<typename T>
-struct Operator_t {
-    std::vector<Operand<T>> operands;
-
-    bool operator==(struct Operator_t<T> const &other) const {
-        return this->operands == other.operands;
-    }
-};
-
-template<typename T>
-using Expression = Operator<T>;
-
-template<typename T>
-using ExpressionList = std::vector<Expression<T>>;
+libexpressions::parsers::ExpressionList<std::string> parseSExpressions(std::string const &input) {
+		auto buffer = yy_scan_string(input.c_str());
+		yyparse();
+		yy_delete_buffer(buffer);
+		yylex_destroy();
+    return result;
+}
 
 }
 

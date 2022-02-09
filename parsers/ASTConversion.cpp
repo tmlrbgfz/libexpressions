@@ -26,6 +26,7 @@
 #include "libexpressions/expressions/operator.hpp"
 #include "libexpressions/expressions/atom.hpp"
 #include "libexpressions/parsers/ast.hpp"
+#include "libexpressions/parsers/ExpressionRepresentationInterface.hpp"
 #include <gsl/gsl_assert>
 #include <stack>
 #include <memory>
@@ -149,10 +150,10 @@ Expression<std::string>   generateASTFromExpression(libexpressions::ExpressionNo
     } operandVisitor(state, stOperands);
     do {
         if(state.top() == EXPRESSION) {
-            if(stOperands.empty()) {
-                stOperands.emplace();
+            if(stOperators.empty()) {
+                stOperators.emplace();
                 decompositionStack.push(exp);
-                state.push(OPERAND);
+                state.push(OPERATOR);
             } else {
                 state.pop();
             }
@@ -199,8 +200,18 @@ Expression<std::string>   generateASTFromExpression(libexpressions::ExpressionNo
             state.pop();
         }
     } while(!state.empty());
-    return stOperands.top().top();
+    return stOperators.top();
 }
+
+std::vector<libexpressions::ExpressionNodePtr> generateExpressionsFromString(libexpressions::ExpressionFactory *factory, libexpressions::parsers::ExpressionRepresentationInterface const* eri, std::string const &string) {
+    auto eriRep = eri->stringToExpressionList(string);
+    std::vector<libexpressions::ExpressionNodePtr> result;
+    std::transform(eriRep.cbegin(), eriRep.cend(), std::back_inserter(result), [factory](auto const &expression) {
+        return generateExpressionFromAST(factory, expression);
+    });
+    return result;
+}
+
 
 }
 
