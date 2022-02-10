@@ -90,20 +90,13 @@ namespace libexpressions {
                                         >
                                     >::type* = nullptr>
     void invokeUsingMatcher(ExpressionNodePtr const &expression, Matcher m, Fn &&fn) {
-        auto getSuccessors = [](ExpressionNodePtr const &nodePtr) {
-            if( llvm::isa<Operator>(nodePtr.get()) ) {
-                Operator const *ptr = llvm::dyn_cast<Operator const>(nodePtr.get());
-                return std::make_tuple(ptr->begin(), ptr->end());
-            }
-            return std::make_tuple(libexpressions::Operator::Iterator(), libexpressions::Operator::Iterator());
-        };
         auto functionToCall = [&m,&fn](ExpressionNodePtr const &nodePtr, Operator::Path const &path) -> bool {
             if(m(nodePtr)) {
                 return fn(nodePtr, path);
             }
             return true;
         };
-        traverseTree<direction>(getSuccessors, functionToCall, expression);
+        traverseTree<direction>(getChildrenIteratorsForExpressionNode, functionToCall, expression);
     }
 
     template<TreeTraversalOrder direction, typename Fn,
