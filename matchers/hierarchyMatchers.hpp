@@ -74,6 +74,7 @@ namespace libexpressions::Matchers {
                     libexpressions::Operator const *op = llvm::dyn_cast<libexpressions::Operator const>(node.get());
                     worklist.insert(worklist.end(), op->begin(), op->end());
                 }
+                worklist.pop_front();
             }
             return false;
         }
@@ -96,6 +97,7 @@ namespace libexpressions::Matchers {
                     libexpressions::Operator const *op = llvm::dyn_cast<libexpressions::Operator const>(node.get());
                     worklist.insert(worklist.end(), op->begin(), op->end());
                 }
+                worklist.pop_front();
             }
             return false;
         }
