@@ -22,6 +22,7 @@
  */
 
 #include "libexpressions/expressions/expression_visitor.hpp"
+#include "libexpressions/expressions/expression_visit_helper.hpp"
 #include "libexpressions/expressions/expression_factory.hpp"
 #include "libexpressions/expressions/operator.hpp"
 #include "libexpressions/expressions/atom.hpp"
@@ -31,6 +32,7 @@
 #include <stack>
 #include <memory>
 #include <iostream>
+#include <llvm/Support/Casting.h>
 
 namespace libexpressions::parsers {
 
@@ -121,18 +123,22 @@ libexpressions::ExpressionNodePtr generateExpressionFromAST(libexpressions::Expr
 }
 
 Expression<std::string>   generateASTFromExpression(libexpressions::ExpressionNodePtr const &exp) {
+    Expects(llvm::isa<libexpressions::Operator const>(exp.get()));
     std::stack<std::stack<Operand<std::string>>> stOperands;
     std::stack<Operator<std::string>> stOperators;
     std::stack<AtomicProposition<std::string>> stAtoms;
     std::stack<libexpressions::ExpressionNodePtr> decompositionStack;
     enum State_t {
-        EXPRESSION,
-        OPERAND,
-        OPERATOR,
+        EXPRESSION_DOWN,
+        EXPRESSION_UP,
+        OPERAND_DOWN,
+        OPERAND_UP,
+        OPERATOR_DOWN,
+        OPERATOR_UP,
         ATOM
     };
     std::stack<State_t> state;
-    state.push(EXPRESSION);
+    state.push(EXPRESSION_DOWN);
     class OperandVisitor : public libexpressions::ExpressionVisitor {
     private:
         std::stack<State_t> &stateStack;
@@ -140,64 +146,66 @@ Expression<std::string>   generateASTFromExpression(libexpressions::ExpressionNo
     public:
         OperandVisitor(std::stack<State_t> &stStack, decltype(stOperands) &opStack) :
             stateStack(stStack), operandStack(opStack) {}
-        void visit(libexpressions::Atom const &/*ap*/) {
+        void operator()(libexpressions::ExpressionNode const* /*node*/) {}
+        void operator()(libexpressions::Atom const */*ap*/) {
             stateStack.push(ATOM);
         }
-        void visit(libexpressions::Operator const &/*op*/) {
-            stateStack.push(OPERATOR);
-            operandStack.emplace();
+        void operator()(libexpressions::Operator const */*op*/) {
+            stateStack.push(OPERATOR_DOWN);
         }
     } operandVisitor(state, stOperands);
     do {
-        if(state.top() == EXPRESSION) {
-            if(stOperators.empty()) {
-                stOperators.emplace();
-                decompositionStack.push(exp);
-                state.push(OPERATOR);
-            } else {
-                state.pop();
-            }
-        } else if(state.top() == OPERAND) {
-            if(stOperators.empty() && stAtoms.empty()) {
-                decompositionStack.top()->accept(&operandVisitor);
-                if(state.top() == ATOM) {
-                } else {
-                }
-            } else {
-                if(stOperators.empty() && !stAtoms.empty()) {
-                    stOperands.top().emplace(std::move(stAtoms.top()));
-                    stAtoms.pop();
-                } else if(!stOperators.empty() && stAtoms.empty()) {
-                    stOperands.top().emplace(std::move(stOperators.top()));
-                    stOperators.pop();
-                } else {
-                    Expects(false);
-                }
-                state.pop();
-            }
-        } else if(state.top() == OPERATOR) {
+        if(state.top() == EXPRESSION_DOWN) {
+            state.pop();
+            state.push(EXPRESSION_UP);
+
+            decompositionStack.push(exp);
+            state.push(OPERATOR_DOWN);
+        } else if(state.top() == EXPRESSION_UP) {
+            state.pop();
+        } else if(state.top() == OPERAND_DOWN) {
+            state.pop();
+            state.push(OPERAND_UP);
+
+            libexpressions::visit(decompositionStack.top().get(), operandVisitor);
+        } else if(state.top() == OPERAND_UP) {
+            state.pop();
+        } else if(state.top() == OPERATOR_DOWN) {
+            state.pop();
+            state.push(OPERATOR_UP);
+
+            Expects(llvm::isa<libexpressions::Operator const>(decompositionStack.top().get()));
             libexpressions::Operator const &op = *std::static_pointer_cast<libexpressions::Operator const>(decompositionStack.top());
-            if(!stOperands.empty() && !stOperands.top().empty()) {
-                stOperators.emplace(Operator<std::string>());
-                while(!stOperands.top().empty()) {
-                    stOperators.top().operands.push_back(stOperands.top().top());
-                    stOperands.top().pop();
-                }
-                state.pop();
-                stOperands.pop();
-                decompositionStack.pop();
-            } else {
-                state.push(OPERAND);
-                for(auto const &operand : op) {
-                    state.push(OPERAND);
-                    decompositionStack.push(operand);
-                }
+
+            for(auto const &operand : op) {
+                state.push(OPERAND_DOWN);
+                decompositionStack.push(operand);
+            }
+            stOperands.emplace();
+        } else if(state.top() == OPERATOR_UP) {
+            stOperators.emplace(Operator<std::string>());
+            while(not stOperands.top().empty()) {
+                stOperators.top().operands.push_back(stOperands.top().top());
+                stOperands.top().pop();
+            }
+            stOperands.pop();
+            decompositionStack.pop();
+            state.pop();
+            if(state.top() == OPERAND_UP) {
+                stOperands.top().emplace(std::move(stOperators.top()));
+                stOperators.pop();
             }
         } else if(state.top() == ATOM) {
+            Expects(llvm::isa<libexpressions::Atom const>(decompositionStack.top().get()));
             libexpressions::Atom const &atom = *std::static_pointer_cast<libexpressions::Atom const>(decompositionStack.top());
+
             stAtoms.push(AtomicProposition<std::string>(atom.getSymbol()));
             decompositionStack.pop();
             state.pop();
+            if(state.top() == OPERAND_UP) {
+                stOperands.top().emplace(std::move(stAtoms.top()));
+                stAtoms.pop();
+            }
         }
     } while(!state.empty());
     return stOperators.top();
