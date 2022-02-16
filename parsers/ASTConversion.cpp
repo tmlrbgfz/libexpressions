@@ -112,7 +112,7 @@ libexpressions::ExpressionNodePtr generateExpressionFromAST(libexpressions::Expr
                 }
             }
         } else if(state.top() == ATOM) {
-            buildingStack.top().push(factory->makeExpression(std::move(stAtoms.top())));
+            buildingStack.top().push(factory->makeIdentifier(std::move(stAtoms.top())));
             stAtoms.pop();
             state.pop(); //Pop ATOM
         }

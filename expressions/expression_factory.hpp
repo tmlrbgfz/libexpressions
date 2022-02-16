@@ -84,13 +84,13 @@ namespace libexpressions {
         template<typename ...Args>
         ExpressionNodePtr makeExpression(Args&&... args) {
             auto operandVector = getOperandVector(std::forward<Args>(args)...);
-            if(operandVector.size() == 1) {
-                return operandVector.front();
-            } else {
-                return std::static_pointer_cast<ExpressionNode const>(
-                    factory->createNode<Operator>(std::move(operandVector))
-                );
-            }
+            return std::static_pointer_cast<ExpressionNode const>(
+                factory->createNode<Operator>(std::move(operandVector))
+            );
+        }
+        ExpressionNodePtr makeIdentifier(std::string const &arg) {
+            return std::static_pointer_cast<ExpressionNode const>(
+                factory->createNode<Atom>(arg));
         }
     };
 }
