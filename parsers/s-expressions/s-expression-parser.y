@@ -55,6 +55,9 @@ extern "C" int yylex(void);
 
 %start RESULT
 
+%define parse.lac full
+%define parse.error detailed
+
 %%
 
 /* Grammar */
@@ -68,9 +71,5 @@ OPERATORLIST[result]: OPERATORLIST[list] OPERATOR {$result = $list; $result->pus
 RESULT: OPERATORLIST { result = std::move(*$OPERATORLIST); delete $OPERATORLIST; }
 
 %%
-
-void yyerror(char const *s) {
-		throw std::runtime_error(s);
-}
 
 /* Epilogue */

@@ -25,11 +25,15 @@
 
 %{
 
+#include <string>
+#include <stdexcept>
+
 #include "libexpressions/parsers/ast.hpp"
 #include "libexpressions/parsers/ASTConversion.hpp"
 #include "libexpressions/parsers/s-expressions/s-expression-parser.hpp"
 #include "s-expression-parser.tab.hpp"
 extern libexpressions::parsers::ExpressionList<std::string> result;
+static std::string errorString;
 
 #define YY_DECL int yylex(void)
 extern "C" YY_DECL;
@@ -55,13 +59,20 @@ WHITESPACE [ \t\n]+
 
 %%
 
+void yyerror(char const *str) {
+		errorString = str;
+}
+
 namespace libexpressions::parsers {
 
 libexpressions::parsers::ExpressionList<std::string> parseSExpressions(std::string const &input) {
 		auto buffer = yy_scan_string(input.c_str());
-		yyparse();
+		auto parseResult = yyparse();
 		yy_delete_buffer(buffer);
 		yylex_destroy();
+		if(parseResult != 0) {
+				throw std::runtime_error(std::string("Could not parse input as S-Expression: ") + errorString);
+		}
     return result;
 }
 
