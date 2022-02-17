@@ -142,10 +142,9 @@ Expression<std::string>   generateASTFromExpression(libexpressions::ExpressionNo
     class OperandVisitor : public libexpressions::ExpressionVisitor {
     private:
         std::stack<State_t> &stateStack;
-        decltype(stOperands)&operandStack;
     public:
-        OperandVisitor(std::stack<State_t> &stStack, decltype(stOperands) &opStack) :
-            stateStack(stStack), operandStack(opStack) {}
+        OperandVisitor(std::stack<State_t> &stStack) :
+            stateStack(stStack) {}
         void operator()(libexpressions::ExpressionNode const* /*node*/) {}
         void operator()(libexpressions::Atom const */*ap*/) {
             stateStack.push(ATOM);
@@ -153,7 +152,7 @@ Expression<std::string>   generateASTFromExpression(libexpressions::ExpressionNo
         void operator()(libexpressions::Operator const */*op*/) {
             stateStack.push(OPERATOR_DOWN);
         }
-    } operandVisitor(state, stOperands);
+    } operandVisitor(state);
     do {
         if(state.top() == EXPRESSION_DOWN) {
             state.pop();
