@@ -69,6 +69,15 @@ namespace libexpressions {
             operands.insert(operands.end(), further.begin(), further.end());
             return operands;
         }
+        // Slightly optimized version for adding whole containers.
+        // This does not copy by using the iterators but simply copies the
+        // whole vector and then appends to it.
+        template<typename ...Args>
+        std::vector<ExpressionNodePtr> getOperandVector(std::vector<ExpressionNodePtr> operands, Args&&... args) {
+            auto further = getOperandVector(std::forward<Args>(args)...);
+            operands.insert(operands.end(), further.begin(), further.end());
+            return operands;
+        }
         // This function is used for no arguments
         std::vector<ExpressionNodePtr> getOperandVector() {
             return {};
