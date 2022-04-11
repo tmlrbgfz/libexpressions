@@ -50,7 +50,6 @@ extern "C" int yylex(void);
 %nterm <operand> OPERAND
 %nterm <operandList> OPERANDLIST
 %nterm <oprtr> OPERATOR
-%nterm <operatorList> OPERATORLIST
 %nterm <operatorList> RESULT
 
 %start RESULT
@@ -66,9 +65,7 @@ OPERAND: IDENTIFIER { $OPERAND = new libexpressions::parsers::Operand<std::strin
 OPERANDLIST[result]: OPERANDLIST[list] OPERAND { $result = $list; $result->push_back(std::move(*$OPERAND)); delete $OPERAND; }
 									 | %empty { $result = new std::vector<libexpressions::parsers::Operand<std::string>>(); }
 OPERATOR: '(' OPERANDLIST ')' { $OPERATOR = new libexpressions::parsers::Operator<std::string>(); $OPERATOR->operands = std::move(*$OPERANDLIST); delete $OPERANDLIST; }
-OPERATORLIST[result]: OPERATORLIST[list] OPERATOR {$result = $list; $result->push_back(std::move(*$OPERATOR)); delete $OPERATOR; }
-									  | %empty { $result = new std::vector<libexpressions::parsers::Operator<std::string>>(); }
-RESULT: OPERATORLIST { result = std::move(*$OPERATORLIST); delete $OPERATORLIST; }
+RESULT: OPERANDLIST { result = std::move(*$OPERANDLIST); delete $OPERANDLIST; }
 
 %%
 

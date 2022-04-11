@@ -36,19 +36,31 @@
 
 namespace libexpressions::parsers {
 
-libexpressions::ExpressionNodePtr generateExpressionFromAST(libexpressions::ExpressionFactory *factory, libexpressions::parsers::Expression<std::string>   const &exp) {
+template<typename T>
+static std::vector<T> stackToVector(std::stack<T> &&stack) {
+    std::vector<T> reverseResult;
+    while(not stack.empty()) {
+        reverseResult.emplace_back(std::move(stack.top()));
+        stack.pop();
+    }
+    std::vector<T> result(reverseResult.rbegin(), reverseResult.rend());
+    return result;
+}
+
+std::vector<libexpressions::ExpressionNodePtr>
+generateExpressionListFromAST(libexpressions::ExpressionFactory *factory, libexpressions::parsers::ExpressionList<std::string>   const &exp) {
     std::stack<Operand<std::string>> stOperands;
     std::stack<Operator<std::string>> stOperators;
     std::stack<AtomicProposition<std::string>> stAtoms;
     std::stack<std::stack<libexpressions::ExpressionNodePtr>> buildingStack;
     enum State_t {
-        EXPRESSION,
+        EXPRESSIONLIST,
         OPERAND,
         OPERATOR,
         ATOM
     };
     std::stack<State_t> state;
-    state.push(EXPRESSION);
+    state.push(EXPRESSIONLIST);
     class OperandVisitor {
     private:
         std::stack<decltype(stOperators)::value_type> &operatorStack;
@@ -71,17 +83,18 @@ libexpressions::ExpressionNodePtr generateExpressionFromAST(libexpressions::Expr
         }
     } operandVisitor(stOperators, stAtoms, state);
     do {
-        if(state.top() == EXPRESSION) {
+        if(state.top() == EXPRESSIONLIST) {
             if(buildingStack.size() > 0) {
-                state.pop(); //Pop EXPRESSION
+                state.pop();
             } else {
                 buildingStack.emplace();
-                state.push(OPERAND);
-                stOperands.push(exp);
+                for(auto const &expression : exp) {
+                    state.push(OPERAND);
+                    stOperands.push(expression);
+                }
             }
         } else if(state.top() == OPERAND) {
             state.pop(); //Pop OPERAND
-            //boost::apply_visitor(operandVisitor, stOperands.top());
             std::visit(operandVisitor, stOperands.top());
             if(state.top() == OPERATOR) {
                 buildingStack.emplace();
@@ -119,11 +132,15 @@ libexpressions::ExpressionNodePtr generateExpressionFromAST(libexpressions::Expr
             state.pop(); //Pop ATOM
         }
     } while(!state.empty());
-    return buildingStack.top().top();
+    std::vector<libexpressions::ExpressionNodePtr> result;
+    while(not buildingStack.top().empty()) {
+        result.emplace_back(std::move(buildingStack.top().top()));
+        buildingStack.top().pop();
+    }
+    return result;
 }
 
-Expression<std::string>   generateASTFromExpression(libexpressions::ExpressionNodePtr const &exp) {
-    Expects(llvm::isa<libexpressions::Operator const>(exp.get()));
+ExpressionList<std::string>   generateASTFromExpressions(std::vector<libexpressions::ExpressionNodePtr> const &exp) {
     std::stack<std::stack<Operand<std::string>>> stOperands;
     std::stack<Operator<std::string>> stOperators;
     std::stack<AtomicProposition<std::string>> stAtoms;
@@ -158,8 +175,11 @@ Expression<std::string>   generateASTFromExpression(libexpressions::ExpressionNo
             state.pop();
             state.push(EXPRESSION_UP);
 
-            decompositionStack.push(exp);
-            state.push(OPERATOR_DOWN);
+            for(auto const &expression : exp) {
+                decompositionStack.push(expression);
+            }
+            state.push(OPERAND_DOWN);
+            stOperands.emplace();
         } else if(state.top() == EXPRESSION_UP) {
             state.pop();
         } else if(state.top() == OPERAND_DOWN) {
@@ -207,16 +227,11 @@ Expression<std::string>   generateASTFromExpression(libexpressions::ExpressionNo
             }
         }
     } while(!state.empty());
-    return stOperators.top();
+    return stackToVector(std::move(stOperands.top()));
 }
 
 std::vector<libexpressions::ExpressionNodePtr> generateExpressionsFromString(libexpressions::ExpressionFactory *factory, libexpressions::parsers::ExpressionRepresentationInterface const* eri, std::string const &string) {
-    auto eriRep = eri->stringToExpressionList(string);
-    std::vector<libexpressions::ExpressionNodePtr> result;
-    std::transform(eriRep.cbegin(), eriRep.cend(), std::back_inserter(result), [factory](auto const &expression) {
-        return generateExpressionFromAST(factory, expression);
-    });
-    return result;
+    return generateExpressionListFromAST(factory, eri->stringToExpressionList(string));
 }
 
 

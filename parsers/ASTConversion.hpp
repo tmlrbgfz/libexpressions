@@ -29,8 +29,8 @@ namespace libexpressions {
     class ExpressionFactory;
     namespace parsers {
         class ExpressionRepresentationInterface;
-        libexpressions::ExpressionNodePtr generateExpressionFromAST(libexpressions::ExpressionFactory *factory, libexpressions::parsers::Expression<std::string>   const &exp);
-        libexpressions::parsers::Expression<std::string> generateASTFromExpression(libexpressions::ExpressionNodePtr const &exp);
+        std::vector<libexpressions::ExpressionNodePtr> generateExpressionListFromAST(libexpressions::ExpressionFactory *factory, libexpressions::parsers::ExpressionList<std::string>   const &exp);
+        libexpressions::parsers::ExpressionList<std::string> generateASTFromExpressions(std::vector<libexpressions::ExpressionNodePtr> const &exp);
 
         std::vector<libexpressions::ExpressionNodePtr> generateExpressionsFromString(libexpressions::ExpressionFactory *factory, ExpressionRepresentationInterface const* eri, std::string const &string);
     }
