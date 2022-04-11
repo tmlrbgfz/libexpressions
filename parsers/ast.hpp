@@ -50,7 +50,7 @@ struct Operator_t {
 };
 
 template<typename T>
-using Expression = Operator<T>;
+using Expression = Operand<T>;
 
 template<typename T>
 using ExpressionList = std::vector<Expression<T>>;

@@ -28,13 +28,15 @@
 #include "libexpressions/utils/tree-visit.hpp"
 #include "libexpressions/parsers/ast.hpp"
 
+namespace libexpressions {
+
 template<>
 size_t getChildNodeIndex(libexpressions::parsers::Operand<std::string> const *parent, libexpressions::parsers::Operand<std::string> const *child) {
     auto const &operands = std::get<libexpressions::parsers::Operator<std::string>>(*parent).operands;
     return static_cast<size_t>(std::distance(operands.cbegin(), std::find(operands.cbegin(), operands.cend(), *child)));
 }
 
-namespace libexpressions::parsers {
+namespace parsers {
 
 std::string sExpressionToString(libexpressions::parsers::Expression<std::string> const &input) {
     std::vector<std::string> resultStack;
@@ -82,5 +84,6 @@ std::string sExpressionToString(libexpressions::parsers::Expression<std::string>
     return resultStack.back();
 }
 
+}
 }
 

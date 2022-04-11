@@ -26,6 +26,9 @@
 #include <vector>
 #include <deque>
 #include <type_traits>
+#include <cstdlib>
+
+namespace libexpressions {
 
 enum class TreeTraversalOrder {
     PREFIX_TRAVERSAL,
@@ -35,7 +38,7 @@ enum class TreeTraversalOrder {
 };
 
 template<typename Fn, typename NodeType>
-auto treeTraversalFunctionAdaptor(Fn &&fn, NodeType &&node, std::vector<size_t> const &/*path*/)
+auto treeTraversalFunctionAdaptor(Fn &&fn, NodeType &&node, std::vector<std::size_t> const &/*path*/)
 ->  std::enable_if_t<std::is_same_v<bool, std::decay_t<std::invoke_result_t<Fn(NodeType const&)>>>, bool>
 {
     return fn(node);
@@ -153,5 +156,7 @@ void traverseTree(ChildIteratorGetterFunction &&childGetter,
             }
         }
     }
+}
+
 }
 
