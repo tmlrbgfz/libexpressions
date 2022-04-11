@@ -51,7 +51,7 @@ namespace libexpressions {
     // function given as the second argument with it.
     template<typename Fn>
     auto visit(libexpressions::ExpressionNode const *node, Fn &&f)
-      -> std::result_of_t<Fn(libexpressions::ExpressionNode const *)> {
+      -> std::result_of_t<Fn(libexpressions::Operator const *)> {
         auto kind = node->getKind();
         Expects(kind == libexpressions::ExpressionNodeKind::EXPRESSION_OPERATOR or
                 kind == libexpressions::ExpressionNodeKind::EXPRESSION_ATOM);

@@ -24,13 +24,20 @@
 
 #include <type_traits>
 #include <memory>
+#include <map>
+#include <set>
+#include <iostream>
 #include <gsl/gsl_assert>
 
 #include "libexpressions/expressions/expression_node.hpp"
 #include "libexpressions/expressions/atom.hpp"
 #include "libexpressions/expressions/operator.hpp"
+#include "libexpressions/expressions/expression_visit_helper.hpp"
 #include "libexpressions/iht/iht_factory.hpp"
 #include "libexpressions/utils/variadic-insert.hpp"
+#include "libexpressions/utils/path_trie.hpp"
+#include "libexpressions/utils/tree-visit.hpp"
+#include "libexpressions/utils/expression-tree-visit.hpp"
 
 namespace libexpressions {
     class ExpressionFactory {
@@ -90,6 +97,14 @@ namespace libexpressions {
 
         ExpressionFactory(IHT::IHTFactory<ExpressionNode> *paramFactory) : factory(paramFactory) {}
 
+        // Creates an expression composed of other expressions, i.e. an
+        // operator. If the expressions given as arguments were produced with a
+        // different underlying IHT factory, the behaviour of other operations
+        // on the resulting expression and on expressions in which the
+        // resulting expression is a subexpression is undefined. Most
+        // importantly, comparisons for equality are effected, as
+        // `exp1->equal_to(exp2) != (exp1 == exp2)` if `exp1` and `exp2` were
+        // produced with different underlying IHT factories.
         template<typename ...Args>
         ExpressionNodePtr makeExpression(Args&&... args) {
             auto operandVector = getOperandVector(std::forward<Args>(args)...);
@@ -100,6 +115,115 @@ namespace libexpressions {
         ExpressionNodePtr makeIdentifier(std::string const &arg) {
             return std::static_pointer_cast<ExpressionNode const>(
                 factory->createNode<Atom>(arg));
+        }
+        ExpressionNodePtr makeNewIdentifier(std::string const &prefix) {
+            std::optional<IHT::IHTNodePtr<ExpressionNode>> node;
+            std::string id = prefix;
+            size_t suffix = 0;
+            do {
+                node = factory->tryCreateNewNode<Atom>(id);
+                if(not node.has_value()) {
+                    id = prefix + "_" + std::to_string(suffix++);
+                    //id = prefix + std::to_string(std::hash<std::string>{}(id));
+                }
+            } while(not node.has_value()); 
+            return std::static_pointer_cast<ExpressionNode const>(node.value());
+        }
+
+        ExpressionNodePtr reproduceExpressionInThisFactory(ExpressionNodePtr const &expressionToReproduce) {
+            if(this->factory->hasEquivalentNode(expressionToReproduce)) {
+                return expressionToReproduce;
+            }
+            TrieNode<ExpressionNodePtr> data;
+
+            class ExpressionReproductionVisitor {
+            private:
+                ExpressionFactory *factory;
+                TrieNode<ExpressionNodePtr>::const_iterator begin;
+                TrieNode<ExpressionNodePtr>::const_iterator end;
+            public:
+                ExpressionReproductionVisitor(ExpressionFactory *factoryToUse, TrieNode<ExpressionNodePtr>::const_iterator iterBegin, TrieNode<ExpressionNodePtr>::const_iterator iterEnd)
+                : factory(factoryToUse), begin(iterBegin), end(iterEnd) { }
+                ExpressionNodePtr operator()(Atom const *atom) {
+                    return factory->makeIdentifier(atom->getSymbol());
+                }
+                ExpressionNodePtr operator()(Operator const *op) {
+                    std::vector<ExpressionNodePtr> operands;
+                    std::transform(begin, end, std::back_inserter(operands), [](auto const &element) {
+                        return std::get<std::unique_ptr<TrieNode<ExpressionNodePtr>>>(element)->value();
+                    });
+                    Ensures(op->getSize() == operands.size());
+                    return factory->makeExpression(operands);
+                }
+            };
+
+            auto reproducer = [&data,factory=this](auto const &node, auto const &path) {
+                auto &trieNode = data[path];
+                ExpressionReproductionVisitor visitor(factory, trieNode.begin(), trieNode.end());
+                trieNode = libexpressions::visit(node.get(), visitor);
+            };
+            traverseTree<TreeTraversalOrder::POSTFIX_TRAVERSAL>(getChildrenIteratorsForExpressionNode,
+                                                                reproducer,
+                                                                expressionToReproduce);
+            return data.value();
+        }
+
+        std::optional<ExpressionNodePtr> tryReproduceExpressionInThisFactory(ExpressionNodePtr const &expressionToReproduce) {
+            if(this->factory->hasEquivalentNode(expressionToReproduce)) {
+                return std::nullopt;
+            } else {
+                return reproduceExpressionInThisFactory(expressionToReproduce);
+            }
+        }
+
+        ExpressionNodePtr modifyExpression(ExpressionNodePtr const &expressionToModify, std::map<Operator::Path, ExpressionNodePtr> const &modificationMap) {
+            // If there are no modifications or there are no modifications that
+            // address any nodes existing within the expression, the code below
+            // does not produce the desired results. We need to catch these
+            // situations.
+            if(modificationMap.empty()) {
+                return expressionToModify;
+            } else {
+                for(auto const &[path, _] : modificationMap) {
+                    // Any path that does not lead to a node in the expression is invalid.
+                    if(Operator::followPath(expressionToModify, path) == nullptr) {
+                        throw std::runtime_error("Invalid path given for expression modification.");
+                    }
+                }
+            }
+
+            // The actual work is happening here
+            // Get the positions of the modifications in a Trie
+            TrieNode<ExpressionNodePtr> data;
+            for(auto const &[positionToModify, modification] : modificationMap) {
+                data[positionToModify] = modification;
+            }
+            // Traverse the expression to modify and change expressions if and only if
+            // - There is a node (modification) at the same position in the Trie or
+            // - A child node of the Trie node corresponding to the current node contains a node (modification)
+            traverseTree<TreeTraversalOrder::POSTFIX_TRAVERSAL>(getChildrenIteratorsForExpressionNode,
+                                            [&data,this](auto const &node, auto const &path){
+                                                if(not data[path].hasValue()) {
+                                                    if(std::none_of(data[path].begin(), data[path].end(), [](auto const &mapElement){
+                                                        return std::get<std::unique_ptr<TrieNode<ExpressionNodePtr>>>(mapElement)->hasValue();
+                                                    })) {
+                                                        data[path] = node;
+                                                    } else {
+                                                        Expects(llvm::dyn_cast<Operator const>(node.get()) != nullptr);
+                                                        Expects(llvm::dyn_cast<Operator const>(node.get())->getSize() == data[path].size());
+                                                        std::vector<ExpressionNodePtr> operands(data[path].size());
+                                                        for(auto &[idx, ptrToData] : data[path]) {
+                                                            operands.at(idx) = ptrToData->value();
+                                                        }
+                                                        data[path] = this->makeExpression(operands);
+                                                    }
+                                                } else {
+                                                    // Do nothing if there is already a value assigned. This means, this node is to be modified.
+                                                }
+                                            },
+                                            expressionToModify);
+            Ensures(data.hasValue());
+            return data.value();
         }
     };
 }

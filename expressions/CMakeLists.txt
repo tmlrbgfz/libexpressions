@@ -5,6 +5,7 @@ target_sources(libexpressions_expressionNodes
         expression_factory.hpp
         expression_node.hpp
         expression_node_kind.hpp
+        expression_replacement.hpp
         expression_visit_helper.hpp
         expression_visitor.hpp
         operator.hpp
