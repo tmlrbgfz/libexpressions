@@ -23,21 +23,39 @@
 #pragma once
 
 #include <algorithm>
-#include "matchers/matchers.hpp"
+#include "libexpressions/matchers/matchers.hpp"
 
 namespace libexpressions::Matchers {
     class MultiMatcher : public libexpressions::MatcherImpl {
     protected:
-        std::vector<std::unique_ptr<MatcherImpl>> matchers;
+        std::vector<std::unique_ptr<libexpressions::MatcherImpl>> matchers;
     public:
-        template<typename ...Args>
-        std::unique_ptr<MatcherImpl> operator()(Args&&... matchers) const {
+        std::unique_ptr<libexpressions::MatcherImpl> operator()(std::vector<std::unique_ptr<libexpressions::MatcherImpl>> &&matcherVector) const {
             auto obj = this->construct();
             auto matcher = dynamic_cast<MultiMatcher*>(obj.get());
             Expects(matcher != nullptr);
-            ((matcher->matchers.push_back(matchers->clone())), ...);
+            for(auto &&submatcher : matcherVector) {
+                matcher->matchers.push_back(std::move(submatcher));
+            }
             return obj;
         }
+        std::unique_ptr<libexpressions::MatcherImpl> operator()(std::vector<std::unique_ptr<libexpressions::MatcherImpl>> const &matcherVector) const {
+            auto obj = this->construct();
+            auto matcher = dynamic_cast<MultiMatcher*>(obj.get());
+            Expects(matcher != nullptr);
+            for(auto const &submatcher : matcherVector) {
+                matcher->matchers.push_back(submatcher->clone());
+            }
+            return obj;
+        }
+        //template<typename ...Args>
+        //std::unique_ptr<libexpressions::MatcherImpl> operator()(Args&&... matcherArgs) const {
+        //    auto obj = this->construct();
+        //    auto matcher = dynamic_cast<MultiMatcher*>(obj.get());
+        //    Expects(matcher != nullptr);
+        //    ((matcher->matchers.push_back(matcherArgs->clone())), ...);
+        //    return obj;
+        //}
         virtual std::unique_ptr<MatcherImpl> clone() const override {
             auto val = libexpressions::MatcherImpl::clone();
             MultiMatcher *casted = static_cast<MultiMatcher*>(val.get());

@@ -22,8 +22,8 @@
  */
 #pragma once
 
-#include "matchers/matchers.hpp"
-#include "matchers/matcherConnectives.hpp"
+#include "libexpressions/matchers/matchers.hpp"
+#include "libexpressions/matchers/matcherConnectives.hpp"
 
 namespace libexpressions::Matchers {
     class EqualityProperty : public MatcherImpl {
@@ -31,7 +31,7 @@ namespace libexpressions::Matchers {
         libexpressions::ExpressionNodePtr ref;
     protected:
         virtual std::unique_ptr<MatcherImpl> construct() const override {
-            return std::unique_ptr<MatcherImpl>(new EqualityProperty);
+            return std::unique_ptr<MatcherImpl>(new EqualityProperty(ref));
         }
         EqualityProperty() = default;
     public:
@@ -43,7 +43,7 @@ namespace libexpressions::Matchers {
     class HasChildProperty : public MatcherImpl {
     protected:
         virtual std::unique_ptr<MatcherImpl> construct() const override {
-            return std::unique_ptr<MatcherImpl>(new ChildProperty);
+            return std::unique_ptr<MatcherImpl>(new HasChildProperty);
         }
     public:
         virtual bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override {
@@ -107,7 +107,7 @@ namespace libexpressions::Matchers {
         EqualityProperty x(ptr);
         return x.clone();
     }
-    ChildProperty HasChild;
+    HasChildProperty HasChild;
     KleeneProperty ThisOrAnyChild;
     DescendantProperty HasDescendant;
 }
