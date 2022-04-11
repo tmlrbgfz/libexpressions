@@ -124,7 +124,7 @@ namespace libexpressions {
         }
 
     public:
-        ExpressionNodePtr followPath(ExpressionNodePtr const &ptr, Operator::Path const &path) {
+        static ExpressionNodePtr followPath(ExpressionNodePtr const &ptr, Operator::Path const &path) {
             ExpressionNodePtr current = ptr;
             for(Operator::Path::const_iterator iter = path.begin(); iter != path.end(); ++iter) {
                 if(not llvm::isa<Operator>(current.get())) {
@@ -133,6 +133,8 @@ namespace libexpressions {
                     Operator const *op = llvm::dyn_cast<Operator const>(current.get());
                     if(op->getOperands().size() > *iter) {
                         current = op->getOperands().at((*iter));
+                    } else {
+                        return nullptr;
                     }
                 }
             }
