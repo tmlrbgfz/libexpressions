@@ -48,7 +48,7 @@ extern "C" YY_DECL;
 
 /* Regexes */
 
-IDENTIFIER [_a-zA-Z!%&/=?+*<>@.,0-9'\-]+
+IDENTIFIER [_a-zA-Z!%&/=?+*<>@.,0-9'\-^]+
 WHITESPACE [ \t\n]+
 
 %%
