@@ -35,7 +35,7 @@
 #include "libexpressions/expressions/expression_visit_helper.hpp"
 #include "libexpressions/iht/iht_factory.hpp"
 #include "libexpressions/utils/variadic-insert.hpp"
-#include "libexpressions/utils/path_trie.hpp"
+#include "libexpressions/utils/trie_node.hpp"
 #include "libexpressions/utils/tree-visit.hpp"
 #include "libexpressions/utils/expression-tree-visit.hpp"
 
@@ -134,15 +134,15 @@ namespace libexpressions {
             if(this->factory->hasEquivalentNode(expressionToReproduce)) {
                 return expressionToReproduce;
             }
-            TrieNode<ExpressionNodePtr> data;
+            TrieNode<Operator::PathElement, ExpressionNodePtr> data;
 
             class ExpressionReproductionVisitor {
             private:
                 ExpressionFactory *factory;
-                TrieNode<ExpressionNodePtr>::const_iterator begin;
-                TrieNode<ExpressionNodePtr>::const_iterator end;
+                TrieNode<Operator::PathElement, ExpressionNodePtr>::const_iterator begin;
+                TrieNode<Operator::PathElement, ExpressionNodePtr>::const_iterator end;
             public:
-                ExpressionReproductionVisitor(ExpressionFactory *factoryToUse, TrieNode<ExpressionNodePtr>::const_iterator iterBegin, TrieNode<ExpressionNodePtr>::const_iterator iterEnd)
+                ExpressionReproductionVisitor(ExpressionFactory *factoryToUse, TrieNode<Operator::PathElement, ExpressionNodePtr>::const_iterator iterBegin, TrieNode<Operator::PathElement, ExpressionNodePtr>::const_iterator iterEnd)
                 : factory(factoryToUse), begin(iterBegin), end(iterEnd) { }
                 ExpressionNodePtr operator()(Atom const *atom) {
                     return factory->makeIdentifier(atom->getSymbol());
@@ -150,7 +150,7 @@ namespace libexpressions {
                 ExpressionNodePtr operator()(Operator const *op) {
                     std::vector<ExpressionNodePtr> operands;
                     std::transform(begin, end, std::back_inserter(operands), [](auto const &element) {
-                        return std::get<std::unique_ptr<TrieNode<ExpressionNodePtr>>>(element)->value();
+                        return std::get<std::unique_ptr<TrieNode<Operator::PathElement, ExpressionNodePtr>>>(element)->value();
                     });
                     Ensures(op->getSize() == operands.size());
                     return factory->makeExpression(operands);
@@ -194,7 +194,7 @@ namespace libexpressions {
 
             // The actual work is happening here
             // Get the positions of the modifications in a Trie
-            TrieNode<ExpressionNodePtr> data;
+            TrieNode<Operator::PathElement, ExpressionNodePtr> data;
             for(auto const &[positionToModify, modification] : modificationMap) {
                 data[positionToModify] = modification;
             }
@@ -205,7 +205,7 @@ namespace libexpressions {
                                             [&data,this](auto const &node, auto const &path){
                                                 if(not data[path].hasValue()) {
                                                     if(std::none_of(data[path].begin(), data[path].end(), [](auto const &mapElement){
-                                                        return std::get<std::unique_ptr<TrieNode<ExpressionNodePtr>>>(mapElement)->hasValue();
+                                                        return std::get<std::unique_ptr<TrieNode<Operator::PathElement, ExpressionNodePtr>>>(mapElement)->hasValue();
                                                     })) {
                                                         data[path] = node;
                                                     } else {

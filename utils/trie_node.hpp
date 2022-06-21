@@ -28,16 +28,18 @@
 
 namespace libexpressions {
 
-template<typename Data>
+template<typename Key, typename Data>
 class TrieNode {
+public:
+    typedef TrieNode<Key, Data> TrieNodeType;
 private:
-    typedef std::unordered_map<size_t, std::unique_ptr<TrieNode<Data>>> InternalContainerType;
+    typedef std::unordered_map<Key, std::unique_ptr<TrieNodeType>> InternalContainerType;
 public:
     typedef typename InternalContainerType::iterator iterator;
     typedef typename InternalContainerType::const_iterator const_iterator;
 private:
     std::optional<Data> data;
-    InternalContainerType descendants;
+    mutable InternalContainerType descendants;
 public:
     operator Data() const {
         return data.value();
@@ -46,37 +48,49 @@ public:
         return data.value();
     }
     Data& value() {
-        return const_cast<Data&>(static_cast<TrieNode<Data> const*>(this)->value());
+        return const_cast<Data&>(static_cast<TrieNodeType const*>(this)->value());
     }
-    TrieNode<Data> &operator=(Data const &d) {
+    TrieNodeType &operator=(Data const &d) {
         this->data = d;
         return *this;
     }
     bool hasValue() const {
         return this->data.has_value();
     }
-    TrieNode<Data> &operator[](size_t index) {
+    TrieNodeType const &operator[](Key const &index) const {
         if(this->descendants[index] == nullptr) {
-            this->descendants[index].reset(new TrieNode<Data>);
+            this->descendants[index].reset(new TrieNodeType);
         }
         return *this->descendants[index];
     }
-    TrieNode<Data> &at(size_t index) {
+    TrieNodeType &operator[](Key const &index) {
+        return const_cast<TrieNodeType&>(static_cast<TrieNodeType const*>(this)->operator[](index));
+    }
+    TrieNodeType const &at(Key const &index) const {
         return *this->descendants.at(index);
     }
-    TrieNode<Data> &operator[](std::vector<size_t> const &index) {
-        TrieNode<Data> *ptr = this;
+    TrieNodeType &at(Key const &index) {
+        return const_cast<TrieNodeType&>(static_cast<TrieNodeType const*>(this->at(index)));
+    }
+    TrieNodeType const &operator[](std::vector<Key> const &index) const {
+        TrieNodeType const *ptr = this;
         for(auto const idx : index) {
             ptr = &ptr->operator[](idx);
         }
         return *ptr;
     }
-    TrieNode<Data> &at(std::vector<size_t> const &index) {
-        TrieNode<Data> *ptr = this;
+    TrieNodeType &operator[](std::vector<Key> const &index) {
+        return const_cast<TrieNodeType&>(static_cast<TrieNodeType const*>(this)->operator[](index));
+    }
+    TrieNodeType const &at(std::vector<Key> const &index) const {
+        TrieNodeType const *ptr = this;
         for(auto const idx : index) {
             ptr = ptr->descendants.at(idx).get();
         }
         return *ptr;
+    }
+    TrieNodeType &at(std::vector<Key> const &index) {
+        return const_cast<TrieNodeType&>(static_cast<TrieNodeType const*>(this)->at(index));
     }
 
     size_t size() const {
@@ -102,24 +116,27 @@ public:
         return this->descendants.cend();
     }
 
-    bool contains(size_t index) const {
+    bool contains(Key const &index) const {
         return this->descendants.count(index) > 0;
     }
-    bool contains(std::vector<size_t> const &index) const {
-        TrieNode<Data> *ptr = this;
+    bool contains(std::vector<Key> const &index) const {
+        TrieNodeType const *ptr = this;
         for(auto const idx : index) {
             if(ptr->contains(idx)) {
-                ptr = ptr->at(idx);
+                ptr = &ptr->at(idx);
             } else {
                 return false;
             }
         }
         return true;
     }
-    bool containsData(size_t const &index) const {
-        return this->contains(index) and this->at(index).has_value();
+    bool containsData(Key const &index) const {
+        return this->contains(index) and this->at(index).hasValue();
     }
-    bool prefixContainsData(std::vector<size_t> index) const {
+    bool containsData(std::vector<Key> const &index) const {
+        return this->contains(index) and this->at(index).hasValue();
+    }
+    bool prefixContainsData(std::vector<Key> index) const {
         while(not index.empty()) {
             if(this->containsData(index)) {
                 return true;
@@ -127,6 +144,15 @@ public:
             index.pop_back();
         }
         return false;
+    }
+    std::vector<Key> getLongestPrefixContainingData(std::vector<Key> index) const {
+        while(not index.empty()) {
+            if(this->containsData(index)) {
+                return index;
+            }
+            index.pop_back();
+        }
+        return index;
     }
 };
 
