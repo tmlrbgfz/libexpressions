@@ -24,6 +24,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <functional>
 
 // namespace for IHT (Immutable Hashed Tree)
 namespace IHT {
@@ -62,9 +63,6 @@ namespace IHT {
 }
 
 namespace std {
-    template<class T> struct hash;
-    template<class T> struct equal_to;
-
     template<typename NodeType> struct hash<IHT::IHTNode<NodeType>> {
         IHT::hash_type operator()(IHT::IHTNode<NodeType> const &node) const {
             return IHT::hashof(node);
