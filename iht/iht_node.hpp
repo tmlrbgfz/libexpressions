@@ -23,10 +23,7 @@
 #pragma once
 
 #include <cstddef>
-
-namespace std {
-    template<class T> class shared_ptr;
-}
+#include <memory>
 
 // namespace for IHT (Immutable Hashed Tree)
 namespace IHT {
