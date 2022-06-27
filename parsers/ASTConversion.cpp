@@ -28,7 +28,7 @@
 #include "libexpressions/expressions/atom.hpp"
 #include "libexpressions/parsers/ast.hpp"
 #include "libexpressions/parsers/ExpressionRepresentationInterface.hpp"
-#include <gsl/assert>
+#include <cassert>
 #include <stack>
 #include <memory>
 #include <iostream>
@@ -192,7 +192,7 @@ ExpressionList<std::string>   generateASTFromExpressions(std::vector<libexpressi
             state.pop();
             state.push(OPERATOR_UP);
 
-            Expects(dynamic_cast<libexpressions::Operator const*>(decompositionStack.top().get()) != nullptr);
+            assert(dynamic_cast<libexpressions::Operator const*>(decompositionStack.top().get()) != nullptr);
             libexpressions::Operator const &op = *std::static_pointer_cast<libexpressions::Operator const>(decompositionStack.top());
 
             for(auto const &operand : op) {
@@ -214,7 +214,7 @@ ExpressionList<std::string>   generateASTFromExpressions(std::vector<libexpressi
                 stOperators.pop();
             }
         } else if(state.top() == ATOM) {
-            Expects(dynamic_cast<libexpressions::Atom const*>(decompositionStack.top().get()) != nullptr);
+            assert(dynamic_cast<libexpressions::Atom const*>(decompositionStack.top().get()) != nullptr);
             libexpressions::Atom const &atom = *std::static_pointer_cast<libexpressions::Atom const>(decompositionStack.top());
 
             stAtoms.push(AtomicProposition<std::string>(atom.getSymbol()));

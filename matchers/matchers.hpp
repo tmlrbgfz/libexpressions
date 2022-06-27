@@ -27,7 +27,7 @@
 #include <deque>
 #include <vector>
 #include <type_traits>
-#include <gsl/assert>
+#include <cassert>
 #include <tuple>
 
 #include "libexpressions/expressions/expression_node.hpp"

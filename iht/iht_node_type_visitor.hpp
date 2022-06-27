@@ -23,7 +23,7 @@
 #pragma once
 
 #include <type_traits>
-#include <gsl/assert>
+#include <cassert>
 
 #include "iht_node.hpp"
 
@@ -32,7 +32,7 @@ namespace IHT {
     struct cast_and_call_impl_t {
         auto operator()(Fn &&f, Node const *node) const
         -> typename std::result_of<Fn(T const*)>::type {
-            Expects(dynamic_cast<T const*>(node));
+            assert(dynamic_cast<T const*>(node));
             return f(dynamic_cast<T const*>(node));
         }
     };

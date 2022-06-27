@@ -23,6 +23,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include "libexpressions/matchers/matchers.hpp"
 
 namespace libexpressions::Matchers {
@@ -33,7 +34,7 @@ namespace libexpressions::Matchers {
         std::unique_ptr<libexpressions::MatcherImpl> operator()(std::vector<std::unique_ptr<libexpressions::MatcherImpl>> &&matcherVector) const {
             auto obj = this->construct();
             auto matcher = dynamic_cast<MultiMatcher*>(obj.get());
-            Expects(matcher != nullptr);
+            assert(matcher != nullptr);
             for(auto &&submatcher : matcherVector) {
                 matcher->matchers.push_back(std::move(submatcher));
             }
@@ -42,7 +43,7 @@ namespace libexpressions::Matchers {
         std::unique_ptr<libexpressions::MatcherImpl> operator()(std::vector<std::unique_ptr<libexpressions::MatcherImpl>> const &matcherVector) const {
             auto obj = this->construct();
             auto matcher = dynamic_cast<MultiMatcher*>(obj.get());
-            Expects(matcher != nullptr);
+            assert(matcher != nullptr);
             for(auto const &submatcher : matcherVector) {
                 matcher->matchers.push_back(submatcher->clone());
             }
@@ -52,7 +53,7 @@ namespace libexpressions::Matchers {
         //std::unique_ptr<libexpressions::MatcherImpl> operator()(Args&&... matcherArgs) const {
         //    auto obj = this->construct();
         //    auto matcher = dynamic_cast<MultiMatcher*>(obj.get());
-        //    Expects(matcher != nullptr);
+        //    assert(matcher != nullptr);
         //    ((matcher->matchers.push_back(matcherArgs->clone())), ...);
         //    return obj;
         //}

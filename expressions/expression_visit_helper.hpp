@@ -22,7 +22,7 @@
  */
 #pragma once
 
-#include <gsl/assert>
+#include <cassert>
 #include <type_traits>
 
 #include "libexpressions/expressions/atom.hpp"
@@ -33,7 +33,7 @@ namespace libexpressions {
     template<typename T, typename Fn, typename Node>
     auto cast_and_call(Fn &&f, Node const *node)
     -> std::result_of_t<Fn(T const*)> {
-        Expects(dynamic_cast<T const*>(node) != nullptr);
+        assert(dynamic_cast<T const*>(node) != nullptr);
         return f(dynamic_cast<T const*>(node));
     }
 
@@ -44,7 +44,7 @@ namespace libexpressions {
     auto visit(libexpressions::ExpressionNode const *node, Fn &&f)
       -> std::result_of_t<Fn(libexpressions::Operator const *)> {
         auto kind = node->getKind();
-        Expects(kind == libexpressions::ExpressionNodeKind::EXPRESSION_OPERATOR or
+        assert(kind == libexpressions::ExpressionNodeKind::EXPRESSION_OPERATOR or
                 kind == libexpressions::ExpressionNodeKind::EXPRESSION_ATOM);
         switch(kind) {
         case libexpressions::ExpressionNodeKind::EXPRESSION_OPERATOR:

@@ -27,7 +27,6 @@
 #include <map>
 #include <set>
 #include <iostream>
-#include <gsl/assert>
 
 #include "libexpressions/expressions/expression_node.hpp"
 #include "libexpressions/expressions/atom.hpp"
@@ -152,7 +151,7 @@ namespace libexpressions {
                     std::transform(begin, end, std::back_inserter(operands), [](auto const &element) {
                         return std::get<std::unique_ptr<TrieNode<Operator::PathElement, ExpressionNodePtr>>>(element)->value();
                     });
-                    Ensures(op->getSize() == operands.size());
+                    assert(op->getSize() == operands.size());
                     return factory->makeExpression(operands);
                 }
             };
@@ -209,8 +208,8 @@ namespace libexpressions {
                                                     })) {
                                                         data[path] = node;
                                                     } else {
-                                                        Expects(dynamic_cast<Operator const*>(node.get()) != nullptr);
-                                                        Expects(dynamic_cast<Operator const*>(node.get())->getSize() == data[path].size());
+                                                        assert(dynamic_cast<Operator const*>(node.get()) != nullptr);
+                                                        assert(dynamic_cast<Operator const*>(node.get())->getSize() == data[path].size());
                                                         std::vector<ExpressionNodePtr> operands(data[path].size());
                                                         for(auto &[idx, ptrToData] : data[path]) {
                                                             operands.at(idx) = ptrToData->value();
@@ -222,7 +221,7 @@ namespace libexpressions {
                                                 }
                                             },
                                             expressionToModify);
-            Ensures(data.hasValue());
+            assert(data.hasValue());
             return data.value();
         }
     };
