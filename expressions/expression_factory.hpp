@@ -27,7 +27,7 @@
 #include <map>
 #include <set>
 #include <iostream>
-#include <gsl/gsl_assert>
+#include <gsl/assert>
 
 #include "libexpressions/expressions/expression_node.hpp"
 #include "libexpressions/expressions/atom.hpp"

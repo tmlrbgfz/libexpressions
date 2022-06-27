@@ -28,7 +28,7 @@
 #include "libexpressions/expressions/atom.hpp"
 #include "libexpressions/parsers/ast.hpp"
 #include "libexpressions/parsers/ExpressionRepresentationInterface.hpp"
-#include <gsl/gsl_assert>
+#include <gsl/assert>
 #include <stack>
 #include <memory>
 #include <iostream>

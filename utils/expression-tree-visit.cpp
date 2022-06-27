@@ -1,7 +1,7 @@
 #include "libexpressions/utils/expression-tree-visit.hpp"
 
 #include <iterator>
-#include <gsl/gsl_assert>
+#include <gsl/assert>
 
 namespace libexpressions {
 

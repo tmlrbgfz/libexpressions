@@ -23,7 +23,7 @@
 #pragma once
 
 #include <type_traits>
-#include <gsl/gsl_assert>
+#include <gsl/assert>
 
 #include "iht_node.hpp"
 

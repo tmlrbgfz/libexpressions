@@ -22,7 +22,7 @@
  */
 #pragma once
 
-#include <gsl/gsl_assert>
+#include <gsl/assert>
 #include <type_traits>
 
 #include "libexpressions/expressions/atom.hpp"
