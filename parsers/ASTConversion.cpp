@@ -32,7 +32,6 @@
 #include <stack>
 #include <memory>
 #include <iostream>
-#include <llvm/Support/Casting.h>
 
 namespace libexpressions::parsers {
 
@@ -193,7 +192,7 @@ ExpressionList<std::string>   generateASTFromExpressions(std::vector<libexpressi
             state.pop();
             state.push(OPERATOR_UP);
 
-            Expects(llvm::isa<libexpressions::Operator const>(decompositionStack.top().get()));
+            Expects(dynamic_cast<libexpressions::Operator const*>(decompositionStack.top().get()) != nullptr);
             libexpressions::Operator const &op = *std::static_pointer_cast<libexpressions::Operator const>(decompositionStack.top());
 
             for(auto const &operand : op) {
@@ -215,7 +214,7 @@ ExpressionList<std::string>   generateASTFromExpressions(std::vector<libexpressi
                 stOperators.pop();
             }
         } else if(state.top() == ATOM) {
-            Expects(llvm::isa<libexpressions::Atom const>(decompositionStack.top().get()));
+            Expects(dynamic_cast<libexpressions::Atom const*>(decompositionStack.top().get()) != nullptr);
             libexpressions::Atom const &atom = *std::static_pointer_cast<libexpressions::Atom const>(decompositionStack.top());
 
             stAtoms.push(AtomicProposition<std::string>(atom.getSymbol()));

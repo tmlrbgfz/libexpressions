@@ -25,7 +25,6 @@
 #include <memory>
 #include <vector>
 #include <iterator>
-#include <llvm/Support/Casting.h>
 
 #include "libexpressions/expressions/expression_node.hpp"
 #include "libexpressions/iht/iht_factory.hpp"
@@ -60,7 +59,7 @@ namespace libexpressions {
                   return result;
               }()) { }
     public:
-        ~Operator() = default;
+        virtual ~Operator() = default;
 
         size_t getSize() const {
             return this->operands.size();
@@ -127,10 +126,10 @@ namespace libexpressions {
         static ExpressionNodePtr followPath(ExpressionNodePtr const &ptr, Operator::Path const &path) {
             ExpressionNodePtr current = ptr;
             for(Operator::Path::const_iterator iter = path.begin(); iter != path.end(); ++iter) {
-                if(not llvm::isa<Operator>(current.get())) {
+                if(not dynamic_cast<Operator const*>(current.get())) {
                     return nullptr;
                 } else {
-                    Operator const *op = llvm::dyn_cast<Operator const>(current.get());
+                    Operator const *op = dynamic_cast<Operator const *>(current.get());
                     if(op->getOperands().size() > *iter) {
                         current = op->getOperands().at((*iter));
                     } else {

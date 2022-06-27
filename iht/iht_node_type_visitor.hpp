@@ -24,7 +24,6 @@
 
 #include <type_traits>
 #include <gsl/gsl_assert>
-#include <llvm/Support/Casting.hpp>
 
 #include "iht_node.hpp"
 
@@ -33,7 +32,8 @@ namespace IHT {
     struct cast_and_call_impl_t {
         auto operator()(Fn &&f, Node const *node) const
         -> typename std::result_of<Fn(T const*)>::type {
-            return f(llvm::dyn_cast<T const>(node));
+            Expects(dynamic_cast<T const*>(node));
+            return f(dynamic_cast<T const*>(node));
         }
     };
     template<typename T, typename Fn, typename Node>

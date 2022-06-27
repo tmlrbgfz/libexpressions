@@ -47,8 +47,8 @@ namespace libexpressions::Matchers {
         }
     public:
         virtual bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override {
-            if(llvm::isa<libexpressions::Operator>(ptr.get())) {
-                libexpressions::Operator const *op = llvm::dyn_cast<libexpressions::Operator const>(ptr.get());
+            if(dynamic_cast<libexpressions::Operator const*>(ptr.get()) != nullptr) {
+                libexpressions::Operator const *op = dynamic_cast<libexpressions::Operator const*>(ptr.get());
                 return std::any_of(op->begin(), op->end(), [this](libexpressions::ExpressionNodePtr const &child)->bool {
                             return this->nested->operator()(child);
                 });
@@ -70,8 +70,8 @@ namespace libexpressions::Matchers {
                 if(this->nested->operator()(node)) {
                     return true;
                 }
-                if(llvm::isa<libexpressions::Operator>(node.get())) {
-                    libexpressions::Operator const *op = llvm::dyn_cast<libexpressions::Operator const>(node.get());
+                if(dynamic_cast<libexpressions::Operator const*>(node.get()) != nullptr) {
+                    libexpressions::Operator const *op = dynamic_cast<libexpressions::Operator const*>(node.get());
                     worklist.insert(worklist.end(), op->begin(), op->end());
                 }
                 worklist.pop_front();
@@ -93,8 +93,8 @@ namespace libexpressions::Matchers {
                 if(node != ptr && this->nested->operator()(node)) {
                     return true;
                 }
-                if(llvm::isa<libexpressions::Operator>(node.get())) {
-                    libexpressions::Operator const *op = llvm::dyn_cast<libexpressions::Operator const>(node.get());
+                if(dynamic_cast<libexpressions::Operator const*>(node.get()) != nullptr) {
+                    libexpressions::Operator const *op = dynamic_cast<libexpressions::Operator const*>(node.get());
                     worklist.insert(worklist.end(), op->begin(), op->end());
                 }
                 worklist.pop_front();

@@ -40,7 +40,7 @@ namespace libexpressions {
             : ExpressionNode(ExpressionNodeKind::EXPRESSION_ATOM),
               symbol(paramSymbol) {}
     public:
-        ~Atom() = default;
+        virtual ~Atom() = default;
 
         std::string const &getSymbol() const {
             return symbol;

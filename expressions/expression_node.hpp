@@ -38,7 +38,7 @@ namespace libexpressions {
     protected:
         ExpressionNode(kind_type kind) : nodeKind(kind) { }
     public:
-        ~ExpressionNode() = default;
+        virtual ~ExpressionNode() = default;
 
         void accept(ExpressionVisitor *visitor) const;
 

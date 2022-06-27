@@ -209,8 +209,8 @@ namespace libexpressions {
                                                     })) {
                                                         data[path] = node;
                                                     } else {
-                                                        Expects(llvm::dyn_cast<Operator const>(node.get()) != nullptr);
-                                                        Expects(llvm::dyn_cast<Operator const>(node.get())->getSize() == data[path].size());
+                                                        Expects(dynamic_cast<Operator const*>(node.get()) != nullptr);
+                                                        Expects(dynamic_cast<Operator const*>(node.get())->getSize() == data[path].size());
                                                         std::vector<ExpressionNodePtr> operands(data[path].size());
                                                         for(auto &[idx, ptrToData] : data[path]) {
                                                             operands.at(idx) = ptrToData->value();

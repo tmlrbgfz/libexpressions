@@ -30,20 +30,11 @@
 #include "libexpressions/expressions/expression_node_kind.hpp"
 
 namespace libexpressions {
-    /*template<typename T, typename Fn, typename Node>
-    struct cast_and_call_impl_t {
-        auto operator()(Fn &&f, Node const *node) const
-        -> typename std::result_of<Fn(T const*)>::type {
-            return f(llvm::dyn_cast<T const>(node));
-        }
-    };
-    template<typename T, typename Fn, typename Node>
-    using cast_and_call = struct cast_and_call_impl_t<T, Fn, Node>;*/
-
     template<typename T, typename Fn, typename Node>
     auto cast_and_call(Fn &&f, Node const *node)
     -> std::result_of_t<Fn(T const*)> {
-        return f(llvm::dyn_cast<T const>(node));
+        Expects(dynamic_cast<T const*>(node) != nullptr);
+        return f(dynamic_cast<T const*>(node));
     }
 
     // This function shall determine the Kind of the Node given as the first
