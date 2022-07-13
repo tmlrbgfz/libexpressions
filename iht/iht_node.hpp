@@ -45,6 +45,9 @@ namespace IHT {
             return static_cast<node_type const*>(this)->hash();
         }
         bool equal_to(IHT::IHTNode<node_type> const *other) const {
+            if(other == nullptr) {
+                return false;
+            }
             return static_cast<node_type const*>(this)->equal_to(static_cast<node_type const*>(other));
         }
     };
