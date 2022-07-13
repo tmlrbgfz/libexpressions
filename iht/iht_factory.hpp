@@ -206,7 +206,6 @@ namespace IHT {
         //If no node was found, insert the created node into the node map
         //and return the pointer
         if(not this->hasEquivalentNode(node.get())) {
-            node->factory = this;
             IHT::IHTNodePtr<NodeType> toInsert(node.get(), node.get_deleter());
             node.release();
             auto &[ptrs] = nodes[toInsert->hash()];
