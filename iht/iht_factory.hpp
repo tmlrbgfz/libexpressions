@@ -50,9 +50,7 @@ namespace IHT {
         decltype(auto) getNodeDeleter(Deleter &&deleter) {
             return [deleter,this](IHT::IHTNode<NodeType> *node) {
                        if(node != nullptr) {
-                           if(node->factory != nullptr) {
-                               this->unregisterNode(node);
-                           }
+                           this->unregisterNode(node);
                            deleter(static_cast<NodeType*>(node));
                        }
                    };
