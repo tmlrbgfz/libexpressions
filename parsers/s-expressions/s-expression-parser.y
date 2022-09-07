@@ -28,10 +28,11 @@
 #include <stdexcept>
 #include "libexpressions/parsers/ast.hpp"
 
-libexpressions::parsers::ExpressionList<std::string> result;
+typedef void* yyscan_t;
+#include "libexpressions/parsers/s-expressions/s-expression-parser.tab.hpp"
+#include "libexpressions/parsers/s-expressions/s-expression-parser.lex.hpp"
 
-void yyerror(char const*);
-extern "C" int yylex(void);
+void libexpressions_s_expressionerror(libexpressions::parsers::ExpressionList<std::string>&, std::string&, yyscan_t, char const*);
 
 %}
 
@@ -56,6 +57,10 @@ extern "C" int yylex(void);
 
 %define parse.lac full
 %define parse.error detailed
+%define api.prefix {libexpressions_s_expression}
+%define api.pure full
+%parse-param {libexpressions::parsers::ExpressionList<std::string> &result} {std::string &errorString}
+%param {yyscan_t yyscanner}
 
 %%
 

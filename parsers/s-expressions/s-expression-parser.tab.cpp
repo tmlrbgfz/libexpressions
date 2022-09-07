@@ -55,7 +55,7 @@
 #define YYSKELETON_NAME "yacc.c"
 
 /* Pure parsers.  */
-#define YYPURE 0
+#define YYPURE 2
 
 /* Push parsers.  */
 #define YYPUSH 0
@@ -63,8 +63,14 @@
 /* Pull parsers.  */
 #define YYPULL 1
 
-
-
+/* Substitute the type names.  */
+#define YYSTYPE         LIBEXPRESSIONS_S_EXPRESSIONSTYPE
+/* Substitute the variable and function names.  */
+#define yyparse         libexpressions_s_expressionparse
+#define yylex           libexpressions_s_expressionlex
+#define yyerror         libexpressions_s_expressionerror
+#define yydebug         libexpressions_s_expressiondebug
+#define yynerrs         libexpressions_s_expressionnerrs
 
 /* First part of user prologue.  */
 #line 26 "s-expression-parser.y"
@@ -73,13 +79,14 @@
 #include <stdexcept>
 #include "libexpressions/parsers/ast.hpp"
 
-libexpressions::parsers::ExpressionList<std::string> result;
+typedef void* yyscan_t;
+#include "libexpressions/parsers/s-expressions/s-expression-parser.tab.hpp"
+#include "libexpressions/parsers/s-expressions/s-expression-parser.lex.hpp"
 
-void yyerror(char const*);
-extern "C" int yylex(void);
+void libexpressions_s_expressionerror(libexpressions::parsers::ExpressionList<std::string>&, std::string&, yyscan_t, char const*);
 
 
-#line 83 "s-expression-parser.tab.cpp"
+#line 90 "s-expression-parser.tab.cpp"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -362,7 +369,7 @@ void free (void *); /* INFRINGES ON USER NAME SPACE */
 
 #if (! defined yyoverflow \
      && (! defined __cplusplus \
-         || (defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
+         || (defined LIBEXPRESSIONS_S_EXPRESSIONSTYPE_IS_TRIVIAL && LIBEXPRESSIONS_S_EXPRESSIONSTYPE_IS_TRIVIAL)))
 
 /* A type that is properly aligned for any stack member.  */
 union yyalloc
@@ -477,11 +484,11 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4
 };
 
-#if YYDEBUG
+#if LIBEXPRESSIONS_S_EXPRESSIONDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    63,    63,    64,    65,    66,    67,    68
+       0,    68,    68,    69,    70,    71,    72,    73
 };
 #endif
 
@@ -578,7 +585,7 @@ static const yytype_int8 yyr2[] =
 enum { YYENOMEM = -2 };
 
 #define yyerrok         (yyerrstatus = 0)
-#define yyclearin       (yychar = YYEMPTY)
+#define yyclearin       (yychar = LIBEXPRESSIONS_S_EXPRESSIONEMPTY)
 
 #define YYACCEPT        goto yyacceptlab
 #define YYABORT         goto yyabortlab
@@ -590,7 +597,7 @@ enum { YYENOMEM = -2 };
 
 #define YYBACKUP(Token, Value)                                    \
   do                                                              \
-    if (yychar == YYEMPTY)                                        \
+    if (yychar == LIBEXPRESSIONS_S_EXPRESSIONEMPTY)                                        \
       {                                                           \
         yychar = (Token);                                         \
         yylval = (Value);                                         \
@@ -601,18 +608,18 @@ enum { YYENOMEM = -2 };
       }                                                           \
     else                                                          \
       {                                                           \
-        yyerror (YY_("syntax error: cannot back up")); \
+        yyerror (result, errorString, yyscanner, YY_("syntax error: cannot back up")); \
         YYERROR;                                                  \
       }                                                           \
   while (0)
 
 /* Backward compatibility with an undocumented macro.
-   Use YYerror or YYUNDEF. */
-#define YYERRCODE YYUNDEF
+   Use LIBEXPRESSIONS_S_EXPRESSIONerror or LIBEXPRESSIONS_S_EXPRESSIONUNDEF. */
+#define YYERRCODE LIBEXPRESSIONS_S_EXPRESSIONUNDEF
 
 
 /* Enable debugging if requested.  */
-#if YYDEBUG
+#if LIBEXPRESSIONS_S_EXPRESSIONDEBUG
 
 # ifndef YYFPRINTF
 #  include <stdio.h> /* INFRINGES ON USER NAME SPACE */
@@ -634,7 +641,7 @@ do {                                                                      \
     {                                                                     \
       YYFPRINTF (stderr, "%s ", Title);                                   \
       yy_symbol_print (stderr,                                            \
-                  Kind, Value); \
+                  Kind, Value, result, errorString, yyscanner); \
       YYFPRINTF (stderr, "\n");                                           \
     }                                                                     \
 } while (0)
@@ -646,10 +653,13 @@ do {                                                                      \
 
 static void
 yy_symbol_value_print (FILE *yyo,
-                       yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep)
+                       yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, libexpressions::parsers::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner)
 {
   FILE *yyoutput = yyo;
   YY_USE (yyoutput);
+  YY_USE (result);
+  YY_USE (errorString);
+  YY_USE (yyscanner);
   if (!yyvaluep)
     return;
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
@@ -664,12 +674,12 @@ yy_symbol_value_print (FILE *yyo,
 
 static void
 yy_symbol_print (FILE *yyo,
-                 yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep)
+                 yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, libexpressions::parsers::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner)
 {
   YYFPRINTF (yyo, "%s %s (",
              yykind < YYNTOKENS ? "token" : "nterm", yysymbol_name (yykind));
 
-  yy_symbol_value_print (yyo, yykind, yyvaluep);
+  yy_symbol_value_print (yyo, yykind, yyvaluep, result, errorString, yyscanner);
   YYFPRINTF (yyo, ")");
 }
 
@@ -703,7 +713,7 @@ do {                                                            \
 
 static void
 yy_reduce_print (yy_state_t *yyssp, YYSTYPE *yyvsp,
-                 int yyrule)
+                 int yyrule, libexpressions::parsers::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner)
 {
   int yylno = yyrline[yyrule];
   int yynrhs = yyr2[yyrule];
@@ -716,7 +726,7 @@ yy_reduce_print (yy_state_t *yyssp, YYSTYPE *yyvsp,
       YYFPRINTF (stderr, "   $%d = ", yyi + 1);
       yy_symbol_print (stderr,
                        YY_ACCESSING_SYMBOL (+yyssp[yyi + 1 - yynrhs]),
-                       &yyvsp[(yyi + 1) - (yynrhs)]);
+                       &yyvsp[(yyi + 1) - (yynrhs)], result, errorString, yyscanner);
       YYFPRINTF (stderr, "\n");
     }
 }
@@ -724,18 +734,18 @@ yy_reduce_print (yy_state_t *yyssp, YYSTYPE *yyvsp,
 # define YY_REDUCE_PRINT(Rule)          \
 do {                                    \
   if (yydebug)                          \
-    yy_reduce_print (yyssp, yyvsp, Rule); \
+    yy_reduce_print (yyssp, yyvsp, Rule, result, errorString, yyscanner); \
 } while (0)
 
 /* Nonzero means print parse trace.  It is left uninitialized so that
    multiple parsers can coexist.  */
 int yydebug;
-#else /* !YYDEBUG */
+#else /* !LIBEXPRESSIONS_S_EXPRESSIONDEBUG */
 # define YYDPRINTF(Args) ((void) 0)
 # define YY_SYMBOL_PRINT(Title, Kind, Value, Location)
 # define YY_STACK_PRINT(Bottom, Top)
 # define YY_REDUCE_PRINT(Rule)
-#endif /* !YYDEBUG */
+#endif /* !LIBEXPRESSIONS_S_EXPRESSIONDEBUG */
 
 
 /* YYINITDEPTH -- initial size of the parser's stacks.  */
@@ -767,7 +777,7 @@ int yydebug;
    required.  Return YYENOMEM if memory is exhausted.  */
 static int
 yy_lac_stack_realloc (YYPTRDIFF_T *yycapacity, YYPTRDIFF_T yyadd,
-#if YYDEBUG
+#if LIBEXPRESSIONS_S_EXPRESSIONDEBUG
                       char const *yydebug_prefix,
                       char const *yydebug_suffix,
 #endif
@@ -871,7 +881,7 @@ do {                                                                    \
    the parser stacks to try to find a new initial context in which the
    current lookahead is syntactically acceptable.  If it fails to find
    such a context, it discards the lookahead.  */
-#if YYDEBUG
+#if LIBEXPRESSIONS_S_EXPRESSIONDEBUG
 # define YY_LAC_DISCARD(Event)                                           \
 do {                                                                     \
   if (yy_lac_established)                                                \
@@ -981,7 +991,7 @@ yy_lac (yy_state_t *yyesa, yy_state_t **yyes,
         else
           {
             if (yy_lac_stack_realloc (yyes_capacity, 1,
-#if YYDEBUG
+#if LIBEXPRESSIONS_S_EXPRESSIONDEBUG
                                       " (", ")",
 #endif
                                       yyes, yyesa, &yyesp, yyes_prev))
@@ -1229,9 +1239,12 @@ yysyntax_error (YYPTRDIFF_T *yymsg_alloc, char **yymsg,
 
 static void
 yydestruct (const char *yymsg,
-            yysymbol_kind_t yykind, YYSTYPE *yyvaluep)
+            yysymbol_kind_t yykind, YYSTYPE *yyvaluep, libexpressions::parsers::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner)
 {
   YY_USE (yyvaluep);
+  YY_USE (result);
+  YY_USE (errorString);
+  YY_USE (yyscanner);
   if (!yymsg)
     yymsg = "Deleting";
   YY_SYMBOL_PRINT (yymsg, yykind, yyvaluep, yylocationp);
@@ -1242,13 +1255,6 @@ yydestruct (const char *yymsg,
 }
 
 
-/* Lookahead token kind.  */
-int yychar;
-
-/* The semantic value of the lookahead symbol.  */
-YYSTYPE yylval;
-/* Number of syntax errors so far.  */
-int yynerrs;
 
 
 
@@ -1258,8 +1264,21 @@ int yynerrs;
 `----------*/
 
 int
-yyparse (void)
+yyparse (libexpressions::parsers::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner)
 {
+/* Lookahead token kind.  */
+int yychar;
+
+
+/* The semantic value of the lookahead symbol.  */
+/* Default value used for initialization, for pacifying older GCCs
+   or non-GCC compilers.  */
+YY_INITIAL_VALUE (static YYSTYPE yyval_default;)
+YYSTYPE yylval YY_INITIAL_VALUE (= yyval_default);
+
+    /* Number of syntax errors so far.  */
+    int yynerrs = 0;
+
     yy_state_fast_t yystate = 0;
     /* Number of tokens to shift before error messages enabled.  */
     int yyerrstatus = 0;
@@ -1308,7 +1327,7 @@ yyparse (void)
 
   YYDPRINTF ((stderr, "Starting parse\n"));
 
-  yychar = YYEMPTY; /* Cause a token to be read.  */
+  yychar = LIBEXPRESSIONS_S_EXPRESSIONEMPTY; /* Cause a token to be read.  */
 
   goto yysetstate;
 
@@ -1418,25 +1437,25 @@ yybackup:
   /* Not known => get a lookahead token if don't already have one.  */
 
   /* YYCHAR is either empty, or end-of-input, or a valid lookahead.  */
-  if (yychar == YYEMPTY)
+  if (yychar == LIBEXPRESSIONS_S_EXPRESSIONEMPTY)
     {
       YYDPRINTF ((stderr, "Reading a token\n"));
-      yychar = yylex ();
+      yychar = yylex (&yylval, yyscanner);
     }
 
-  if (yychar <= YYEOF)
+  if (yychar <= LIBEXPRESSIONS_S_EXPRESSIONEOF)
     {
-      yychar = YYEOF;
+      yychar = LIBEXPRESSIONS_S_EXPRESSIONEOF;
       yytoken = YYSYMBOL_YYEOF;
       YYDPRINTF ((stderr, "Now at end of input.\n"));
     }
-  else if (yychar == YYerror)
+  else if (yychar == LIBEXPRESSIONS_S_EXPRESSIONerror)
     {
       /* The scanner already issued an error message, process directly
          to error recovery.  But do not keep the error token as
          lookahead, it is too special and may lead us to an endless
          loop in error recovery. */
-      yychar = YYUNDEF;
+      yychar = LIBEXPRESSIONS_S_EXPRESSIONUNDEF;
       yytoken = YYSYMBOL_YYerror;
       goto yyerrlab1;
     }
@@ -1477,7 +1496,7 @@ yybackup:
   YY_IGNORE_MAYBE_UNINITIALIZED_END
 
   /* Discard the shifted token.  */
-  yychar = YYEMPTY;
+  yychar = LIBEXPRESSIONS_S_EXPRESSIONEMPTY;
   YY_LAC_DISCARD ("shift");
   goto yynewstate;
 
@@ -1516,43 +1535,43 @@ yyreduce:
     switch (yyn)
       {
   case 2: /* OPERAND: IDENTIFIER  */
-#line 63 "s-expression-parser.y"
+#line 68 "s-expression-parser.y"
                     { (yyval.operand) = new libexpressions::parsers::Operand<std::string>(*(yyvsp[0].atom)); delete (yyvsp[0].atom); }
-#line 1522 "s-expression-parser.tab.cpp"
+#line 1541 "s-expression-parser.tab.cpp"
     break;
 
   case 3: /* OPERAND: OPERATOR  */
-#line 64 "s-expression-parser.y"
+#line 69 "s-expression-parser.y"
                                     { (yyval.operand) = new libexpressions::parsers::Operand<std::string>(*(yyvsp[0].oprtr)); delete (yyvsp[0].oprtr); }
-#line 1528 "s-expression-parser.tab.cpp"
+#line 1547 "s-expression-parser.tab.cpp"
     break;
 
   case 4: /* OPERANDLIST: OPERANDLIST OPERAND  */
-#line 65 "s-expression-parser.y"
+#line 70 "s-expression-parser.y"
                                                { (yyval.operandList) = (yyvsp[-1].operandList); (yyval.operandList)->push_back(std::move(*(yyvsp[0].operand))); delete (yyvsp[0].operand); }
-#line 1534 "s-expression-parser.tab.cpp"
+#line 1553 "s-expression-parser.tab.cpp"
     break;
 
   case 5: /* OPERANDLIST: %empty  */
-#line 66 "s-expression-parser.y"
+#line 71 "s-expression-parser.y"
                                                                                   { (yyval.operandList) = new std::vector<libexpressions::parsers::Operand<std::string>>(); }
-#line 1540 "s-expression-parser.tab.cpp"
+#line 1559 "s-expression-parser.tab.cpp"
     break;
 
   case 6: /* OPERATOR: '(' OPERANDLIST ')'  */
-#line 67 "s-expression-parser.y"
+#line 72 "s-expression-parser.y"
                               { (yyval.oprtr) = new libexpressions::parsers::Operator<std::string>(); (yyval.oprtr)->operands = std::move(*(yyvsp[-1].operandList)); delete (yyvsp[-1].operandList); }
-#line 1546 "s-expression-parser.tab.cpp"
+#line 1565 "s-expression-parser.tab.cpp"
     break;
 
   case 7: /* RESULT: OPERANDLIST  */
-#line 68 "s-expression-parser.y"
+#line 73 "s-expression-parser.y"
                     { result = std::move(*(yyvsp[0].operandList)); delete (yyvsp[0].operandList); }
-#line 1552 "s-expression-parser.tab.cpp"
+#line 1571 "s-expression-parser.tab.cpp"
     break;
 
 
-#line 1556 "s-expression-parser.tab.cpp"
+#line 1575 "s-expression-parser.tab.cpp"
 
         default: break;
       }
@@ -1597,7 +1616,7 @@ yyreduce:
 yyerrlab:
   /* Make sure we have latest lookahead translation.  See comments at
      user semantic actions for why this is necessary.  */
-  yytoken = yychar == YYEMPTY ? YYSYMBOL_YYEMPTY : YYTRANSLATE (yychar);
+  yytoken = yychar == LIBEXPRESSIONS_S_EXPRESSIONEMPTY ? YYSYMBOL_YYEMPTY : YYTRANSLATE (yychar);
   /* If not already recovering from an error, report this error.  */
   if (!yyerrstatus)
     {
@@ -1607,7 +1626,7 @@ yyerrlab:
           = {yyssp, yyesa, &yyes, &yyes_capacity, yytoken};
         char const *yymsgp = YY_("syntax error");
         int yysyntax_error_status;
-        if (yychar != YYEMPTY)
+        if (yychar != LIBEXPRESSIONS_S_EXPRESSIONEMPTY)
           YY_LAC_ESTABLISH;
         yysyntax_error_status = yysyntax_error (&yymsg_alloc, &yymsg, &yyctx);
         if (yysyntax_error_status == 0)
@@ -1631,7 +1650,7 @@ yyerrlab:
                 yysyntax_error_status = YYENOMEM;
               }
           }
-        yyerror (yymsgp);
+        yyerror (result, errorString, yyscanner, yymsgp);
         if (yysyntax_error_status == YYENOMEM)
           YYNOMEM;
       }
@@ -1642,17 +1661,17 @@ yyerrlab:
       /* If just tried and failed to reuse lookahead token after an
          error, discard it.  */
 
-      if (yychar <= YYEOF)
+      if (yychar <= LIBEXPRESSIONS_S_EXPRESSIONEOF)
         {
           /* Return failure if at end of input.  */
-          if (yychar == YYEOF)
+          if (yychar == LIBEXPRESSIONS_S_EXPRESSIONEOF)
             YYABORT;
         }
       else
         {
           yydestruct ("Error: discarding",
-                      yytoken, &yylval);
-          yychar = YYEMPTY;
+                      yytoken, &yylval, result, errorString, yyscanner);
+          yychar = LIBEXPRESSIONS_S_EXPRESSIONEMPTY;
         }
     }
 
@@ -1707,7 +1726,7 @@ yyerrlab1:
 
 
       yydestruct ("Error: popping",
-                  YY_ACCESSING_SYMBOL (yystate), yyvsp);
+                  YY_ACCESSING_SYMBOL (yystate), yyvsp, result, errorString, yyscanner);
       YYPOPSTACK (1);
       yystate = *yyssp;
       YY_STACK_PRINT (yyss, yyssp);
@@ -1749,7 +1768,7 @@ yyabortlab:
 | yyexhaustedlab -- YYNOMEM (memory exhaustion) comes here.  |
 `-----------------------------------------------------------*/
 yyexhaustedlab:
-  yyerror (YY_("memory exhausted"));
+  yyerror (result, errorString, yyscanner, YY_("memory exhausted"));
   yyresult = 2;
   goto yyreturnlab;
 
@@ -1758,13 +1777,13 @@ yyexhaustedlab:
 | yyreturnlab -- parsing is finished, clean up and return.  |
 `----------------------------------------------------------*/
 yyreturnlab:
-  if (yychar != YYEMPTY)
+  if (yychar != LIBEXPRESSIONS_S_EXPRESSIONEMPTY)
     {
       /* Make sure we have latest lookahead translation.  See comments at
          user semantic actions for why this is necessary.  */
       yytoken = YYTRANSLATE (yychar);
       yydestruct ("Cleanup: discarding lookahead",
-                  yytoken, &yylval);
+                  yytoken, &yylval, result, errorString, yyscanner);
     }
   /* Do not reclaim the symbols of the rule whose action triggered
      this YYABORT or YYACCEPT.  */
@@ -1773,7 +1792,7 @@ yyreturnlab:
   while (yyssp != yyss)
     {
       yydestruct ("Cleanup: popping",
-                  YY_ACCESSING_SYMBOL (+*yyssp), yyvsp);
+                  YY_ACCESSING_SYMBOL (+*yyssp), yyvsp, result, errorString, yyscanner);
       YYPOPSTACK (1);
     }
 #ifndef yyoverflow
@@ -1787,7 +1806,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 70 "s-expression-parser.y"
+#line 75 "s-expression-parser.y"
 
 
 /* Epilogue */

@@ -35,36 +35,44 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_S_EXPRESSION_PARSER_TAB_HPP_INCLUDED
-# define YY_YY_S_EXPRESSION_PARSER_TAB_HPP_INCLUDED
+#ifndef YY_LIBEXPRESSIONS_S_EXPRESSION_S_EXPRESSION_PARSER_TAB_HPP_INCLUDED
+# define YY_LIBEXPRESSIONS_S_EXPRESSION_S_EXPRESSION_PARSER_TAB_HPP_INCLUDED
 /* Debug traces.  */
-#ifndef YYDEBUG
-# define YYDEBUG 0
-#endif
+#ifndef LIBEXPRESSIONS_S_EXPRESSIONDEBUG
+# if defined YYDEBUG
 #if YYDEBUG
-extern int yydebug;
+#   define LIBEXPRESSIONS_S_EXPRESSIONDEBUG 1
+#  else
+#   define LIBEXPRESSIONS_S_EXPRESSIONDEBUG 0
+#  endif
+# else /* ! defined YYDEBUG */
+#  define LIBEXPRESSIONS_S_EXPRESSIONDEBUG 0
+# endif /* ! defined YYDEBUG */
+#endif  /* ! defined LIBEXPRESSIONS_S_EXPRESSIONDEBUG */
+#if LIBEXPRESSIONS_S_EXPRESSIONDEBUG
+extern int libexpressions_s_expressiondebug;
 #endif
 
 /* Token kinds.  */
-#ifndef YYTOKENTYPE
-# define YYTOKENTYPE
-  enum yytokentype
+#ifndef LIBEXPRESSIONS_S_EXPRESSIONTOKENTYPE
+# define LIBEXPRESSIONS_S_EXPRESSIONTOKENTYPE
+  enum libexpressions_s_expressiontokentype
   {
-    YYEMPTY = -2,
-    YYEOF = 0,                     /* "end of file"  */
-    YYerror = 256,                 /* error  */
-    YYUNDEF = 257,                 /* "invalid token"  */
+    LIBEXPRESSIONS_S_EXPRESSIONEMPTY = -2,
+    LIBEXPRESSIONS_S_EXPRESSIONEOF = 0, /* "end of file"  */
+    LIBEXPRESSIONS_S_EXPRESSIONerror = 256, /* error  */
+    LIBEXPRESSIONS_S_EXPRESSIONUNDEF = 257, /* "invalid token"  */
     IDENTIFIER = 258,              /* IDENTIFIER  */
     WHITESPACE = 259               /* WHITESPACE  */
   };
-  typedef enum yytokentype yytoken_kind_t;
+  typedef enum libexpressions_s_expressiontokentype libexpressions_s_expressiontoken_kind_t;
 #endif
 
 /* Value type.  */
-#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-union YYSTYPE
+#if ! defined LIBEXPRESSIONS_S_EXPRESSIONSTYPE && ! defined LIBEXPRESSIONS_S_EXPRESSIONSTYPE_IS_DECLARED
+union LIBEXPRESSIONS_S_EXPRESSIONSTYPE
 {
-#line 40 "s-expression-parser.y"
+#line 41 "s-expression-parser.y"
 
 	libexpressions::parsers::AtomicProposition<std::string> *atom;
 	libexpressions::parsers::Operand<std::string> *operand;
@@ -72,19 +80,18 @@ union YYSTYPE
 	libexpressions::parsers::Operator<std::string> *oprtr;
 	std::vector<libexpressions::parsers::Operator<std::string>> *operatorList;
 
-#line 76 "s-expression-parser.tab.hpp"
+#line 84 "s-expression-parser.tab.hpp"
 
 };
-typedef union YYSTYPE YYSTYPE;
-# define YYSTYPE_IS_TRIVIAL 1
-# define YYSTYPE_IS_DECLARED 1
+typedef union LIBEXPRESSIONS_S_EXPRESSIONSTYPE LIBEXPRESSIONS_S_EXPRESSIONSTYPE;
+# define LIBEXPRESSIONS_S_EXPRESSIONSTYPE_IS_TRIVIAL 1
+# define LIBEXPRESSIONS_S_EXPRESSIONSTYPE_IS_DECLARED 1
 #endif
 
 
-extern YYSTYPE yylval;
 
 
-int yyparse (void);
+int libexpressions_s_expressionparse (libexpressions::parsers::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner);
 
 
-#endif /* !YY_YY_S_EXPRESSION_PARSER_TAB_HPP_INCLUDED  */
+#endif /* !YY_LIBEXPRESSIONS_S_EXPRESSION_S_EXPRESSION_PARSER_TAB_HPP_INCLUDED  */

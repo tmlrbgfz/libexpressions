@@ -27,16 +27,13 @@
 
 #include <string>
 #include <stdexcept>
+#include <system_error>
 
 #include "libexpressions/parsers/ast.hpp"
 #include "libexpressions/parsers/ASTConversion.hpp"
 #include "libexpressions/parsers/s-expressions/s-expression-parser.hpp"
 #include "s-expression-parser.tab.hpp"
-extern libexpressions::parsers::ExpressionList<std::string> result;
-static std::string errorString;
-
-#define YY_DECL int yylex(void)
-extern "C" YY_DECL;
+#define YYSTYPE LIBEXPRESSIONS_S_EXPRESSIONSTYPE
 
 %}
 
@@ -45,6 +42,11 @@ extern "C" YY_DECL;
 %option noyywrap
 %option nounput
 %option noinput
+%option prefix="libexpressions_s_expression"
+%option reentrant
+%option bison-bridge
+%option warn
+%option nodefault
 
 /* Regexes */
 
@@ -53,23 +55,29 @@ WHITESPACE [ \t\n]+
 
 %%
 
-{IDENTIFIER} { yylval.atom = new libexpressions::parsers::AtomicProposition<std::string>(std::string(yytext, yyleng)); return IDENTIFIER; }
+{IDENTIFIER} { yylval->atom = new libexpressions::parsers::AtomicProposition<std::string>(std::string(yytext, yyleng)); return IDENTIFIER; }
 {WHITESPACE} { }
 . { return static_cast<unsigned char>(*yytext); }
 
 %%
 
-void yyerror(char const *str) {
+void libexpressions_s_expressionerror(libexpressions::parsers::ExpressionList<std::string> &/*result*/, std::string &errorString, yyscan_t /*scanner*/, char const *str) {
 		errorString = str;
 }
 
 namespace libexpressions::parsers {
 
 libexpressions::parsers::ExpressionList<std::string> parseSExpressions(std::string const &input) {
-		auto buffer = yy_scan_string(input.c_str());
-		auto parseResult = yyparse();
-		yy_delete_buffer(buffer);
-		yylex_destroy();
+		libexpressions::parsers::ExpressionList<std::string> result;
+		std::string errorString;
+		yyscan_t scanner;
+		if(yylex_init(&scanner)) {
+			throw std::system_error(errno, std::system_category());
+		}
+		auto buffer = yy_scan_string(input.c_str(), scanner);
+		auto parseResult = libexpressions_s_expressionparse(result, errorString, scanner);
+		yy_delete_buffer(buffer, scanner);
+		yylex_destroy(scanner);
 		if(parseResult != 0) {
 				throw std::runtime_error(std::string("Could not parse input as S-Expression: ") + errorString);
 		}
