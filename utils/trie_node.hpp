@@ -74,7 +74,7 @@ public:
     }
     TrieNodeType const &operator[](std::vector<Key> const &index) const {
         TrieNodeType const *ptr = this;
-        for(auto const idx : index) {
+        for(auto const &idx : index) {
             ptr = &ptr->operator[](idx);
         }
         return *ptr;
@@ -84,7 +84,7 @@ public:
     }
     TrieNodeType const &at(std::vector<Key> const &index) const {
         TrieNodeType const *ptr = this;
-        for(auto const idx : index) {
+        for(auto const &idx : index) {
             ptr = ptr->descendants.at(idx).get();
         }
         return *ptr;
@@ -121,7 +121,7 @@ public:
     }
     bool contains(std::vector<Key> const &index) const {
         TrieNodeType const *ptr = this;
-        for(auto const idx : index) {
+        for(auto const &idx : index) {
             if(ptr->contains(idx)) {
                 ptr = &ptr->at(idx);
             } else {
