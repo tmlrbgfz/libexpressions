@@ -149,7 +149,7 @@ namespace libexpressions {
                 ExpressionNodePtr operator()(Operator const *op) {
                     std::vector<ExpressionNodePtr> operands;
                     std::transform(begin, end, std::back_inserter(operands), [](auto const &element) {
-                        return std::get<std::unique_ptr<TrieNode<Operator::PathElement, ExpressionNodePtr>>>(element)->value();
+                        return std::get<std::optional<TrieNode<Operator::PathElement, ExpressionNodePtr>>>(element)->value();
                     });
                     assert(op->getSize() == operands.size());
                     return factory->makeExpression(operands);
@@ -204,7 +204,7 @@ namespace libexpressions {
                                             [&data,this](auto const &node, auto const &path){
                                                 if(not data[path].hasValue()) {
                                                     if(std::none_of(data[path].begin(), data[path].end(), [](auto const &mapElement){
-                                                        return std::get<std::unique_ptr<TrieNode<Operator::PathElement, ExpressionNodePtr>>>(mapElement)->hasValue();
+                                                        return std::get<std::optional<TrieNode<Operator::PathElement, ExpressionNodePtr>>>(mapElement)->hasValue();
                                                     })) {
                                                         data[path] = node;
                                                     } else {

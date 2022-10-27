@@ -33,7 +33,7 @@ class TrieNode {
 public:
     typedef TrieNode<Key, Data> TrieNodeType;
 private:
-    typedef std::unordered_map<Key, std::unique_ptr<TrieNodeType>> InternalContainerType;
+    typedef std::unordered_map<Key, std::optional<TrieNodeType>> InternalContainerType;
 public:
     typedef typename InternalContainerType::iterator iterator;
     typedef typename InternalContainerType::const_iterator const_iterator;
@@ -58,8 +58,8 @@ public:
         return this->data.has_value();
     }
     TrieNodeType const &operator[](Key const &index) const {
-        if(this->descendants[index] == nullptr) {
-            this->descendants[index].reset(new TrieNodeType);
+        if(not this->descendants[index].has_value()) {
+            this->descendants[index].emplace();
         }
         return *this->descendants[index];
     }
@@ -67,7 +67,7 @@ public:
         return const_cast<TrieNodeType&>(static_cast<TrieNodeType const*>(this)->operator[](index));
     }
     TrieNodeType const &at(Key const &index) const {
-        return *this->descendants.at(index);
+        return this->descendants.at(index).value();
     }
     TrieNodeType &at(Key const &index) {
         return const_cast<TrieNodeType&>(static_cast<TrieNodeType const*>(this->at(index)));
@@ -85,7 +85,7 @@ public:
     TrieNodeType const &at(std::vector<Key> const &index) const {
         TrieNodeType const *ptr = this;
         for(auto const &idx : index) {
-            ptr = ptr->descendants.at(idx).get();
+            ptr = &ptr->descendants.at(idx).value();
         }
         return *ptr;
     }
