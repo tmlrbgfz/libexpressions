@@ -110,6 +110,7 @@ namespace libexpressions::Matchers {
         virtual bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override {
             return nested->operator()(ptr) == false;
         }
+        using MatcherImpl::operator();
     };
     
     MatcherConjunction And;
