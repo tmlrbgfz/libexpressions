@@ -26,6 +26,7 @@ else()
 endif()
 
 add_subdirectory(expressions)
+add_subdirectory(evaluators)
 add_subdirectory(iht)
 add_subdirectory(matchers)
 add_subdirectory(parsers)
@@ -34,6 +35,7 @@ add_subdirectory(utils)
 target_link_libraries(expressions
     PUBLIC
         libexpressions_expressionNodes
+        libexpressions_evaluators
         libexpressions_iht
         libexpressions_matchers
         libexpressions_parsers
