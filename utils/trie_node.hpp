@@ -41,6 +41,24 @@ private:
     std::optional<Data> data;
     mutable InternalContainerType descendants;
 public:
+    TrieNode() = default;
+    TrieNode(TrieNodeType const &other)
+        : data(other.data) {
+        // Note: Tries of sufficient size could overflow the stack.
+        for(auto const &[key, value] : other.descendants) {
+            this->descendants.emplace(key, std::make_unique<TrieNodeType>(*value));
+        }
+    }
+    TrieNode(TrieNodeType &&other) = default;
+    TrieNodeType &operator=(TrieNodeType const &other) {
+        this->data = other.data;
+        // Note: Tries of sufficient size could overflow the stack.
+        for(auto const &[key, value] : other.descendants) {
+            this->descendants.emplace(key, std::make_unique<TrieNodeType>(*value));
+        }
+    }
+    TrieNodeType &operator=(TrieNodeType &&other) = default;
+
     operator Data() const {
         return data.value();
     }
