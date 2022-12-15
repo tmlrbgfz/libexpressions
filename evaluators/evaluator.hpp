@@ -73,8 +73,8 @@ namespace libexpressions {
         };
 
         TrieNode evaluationResults;
-        auto evaluate = [&evaluationResults,&semantics](auto const &node, auto const &path) {
-            evaluationResults[path] = libexpressions::visit(node.get(), ExpressionNodeEvaluationVisitor{path, evaluationResults, semantics});
+        auto evaluate = [&evaluationResults,&semantics](auto const &nodeInLambda, auto const &path) {
+            evaluationResults[path] = libexpressions::visit(nodeInLambda.get(), ExpressionNodeEvaluationVisitor{path, evaluationResults, semantics});
             return evaluationResults.at(path);
         };
         traverseTree<TreeTraversalOrder::POSTFIX_TRAVERSAL>(getChildrenIteratorsForExpressionNode,
