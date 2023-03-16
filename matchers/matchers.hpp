@@ -35,6 +35,7 @@
 #include "libexpressions/utils/expression-tree-visit.hpp"
 
 namespace libexpressions {
+    class Matcher;
     class MatcherImpl {
     protected:
         std::unique_ptr<MatcherImpl> nested;
@@ -49,12 +50,9 @@ namespace libexpressions {
         virtual std::unique_ptr<MatcherImpl> operator()(std::unique_ptr<MatcherImpl> &&matcher) const final {
             return this->construct(std::move(matcher));
         }
+        virtual std::unique_ptr<MatcherImpl> operator()(Matcher const &matcher) const final;
 
         virtual bool operator()(ExpressionNodePtr const &ptr) const = 0;
-        /*template<typename ...Args>
-        std::unique_ptr<MatcherImpl> operator()(Args&&... args) const {
-            return this->construct(std::forward<Args>(args)...);
-        }*/
 
         virtual std::unique_ptr<MatcherImpl> clone() const {
             if(nested != nullptr) {
@@ -77,7 +75,15 @@ namespace libexpressions {
         Matcher operator()(Matcher const &other) const {
             return { matcher->operator()(other.matcher->clone()) };
         }
+
+        std::unique_ptr<MatcherImpl> const &getImpl() const {
+            return this->matcher;
+        }
     };
+
+    std::unique_ptr<MatcherImpl> MatcherImpl::operator()(Matcher const &matcher) const {
+        return this->operator()(matcher.getImpl()->clone());
+    }
 
     // Invoke function `fn` on all expression nodes where a given matcher matches
     template<TreeTraversalOrder direction, typename Fn,

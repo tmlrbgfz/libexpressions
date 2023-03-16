@@ -190,22 +190,38 @@ namespace libexpressions::Matchers {
         }
     };
 
-    std::unique_ptr<MatcherImpl> IsEqual(libexpressions::ExpressionNodePtr const &ptr) {
+    Matcher IsEqual(libexpressions::ExpressionNodePtr const &ptr) {
         EqualityProperty x(ptr);
         return x.clone();
     }
-    HasChildProperty HasChild;
-    AllChildrenProperty AllChildren;
-    std::unique_ptr<MatcherImpl> HasNthChild(size_t n) {
-        return std::make_unique<NthChildProperty>(n);
+    template<typename... Args>
+    Matcher HasChild(Args&& ...args) {
+        HasChildProperty prop;
+        return prop(args...);
     }
-    std::unique_ptr<MatcherImpl> AllChildrenExceptNth(size_t n) {
-        return std::make_unique<AllExceptNthChildProperty>(n);
+    template<typename... Args>
+    Matcher AllChildren(Args&& ...args) {
+        AllChildrenProperty prop;
+        return prop(args...);
     }
-    KleeneProperty ThisOrAnyChild;
-    DescendantProperty HasDescendant;
-    std::unique_ptr<MatcherImpl> RecursiveUntilProperty(std::unique_ptr<MatcherImpl> &&invariantMatcher) {
-        return std::make_unique<AllChildrenRecurseProperty>(std::move(invariantMatcher));
+    Matcher HasNthChild(size_t n) {
+        return NthChildProperty(n).clone();
+    }
+    Matcher AllChildrenExceptNth(size_t n) {
+        return AllExceptNthChildProperty(n).clone();
+    }
+    template<typename... Args>
+    Matcher ThisOrAnyChild(Args&& ...args) {
+        KleeneProperty prop;
+        return prop(args...);
+    }
+    template<typename... Args>
+    Matcher HasDescendant(Args&& ...args) {
+        DescendantProperty prop;
+        return prop(args...);
+    }
+    Matcher RecursiveUntilProperty(Matcher const &invariantMatcher) {
+        return AllChildrenRecurseProperty(invariantMatcher.getImpl()->clone()).clone();
     }
 }
 

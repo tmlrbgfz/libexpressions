@@ -30,33 +30,58 @@ namespace libexpressions::Matchers {
     class MultiMatcher : public libexpressions::MatcherImpl {
     protected:
         std::vector<std::unique_ptr<libexpressions::MatcherImpl>> matchers;
+        void addMatcher(MultiMatcher *obj, std::unique_ptr<libexpressions::MatcherImpl> &&impl) const {
+            assert(obj != nullptr);
+            obj->matchers.emplace_back(std::move(impl));
+        }
+        void addMatcher(MultiMatcher *obj, std::unique_ptr<libexpressions::MatcherImpl> const &impl) const {
+            this->addMatcher(obj, impl->clone());
+        }
+        void addMatcher(MultiMatcher *obj, Matcher const &matcher) const {
+            this->addMatcher(obj, matcher.getImpl()->clone());
+        }
+        template<typename... Args>
+        void addMatcher(MultiMatcher *obj, std::unique_ptr<libexpressions::MatcherImpl> &&impl, Args&& ...args) const {
+            obj->matchers.emplace_back(impl);
+            this->addMatcher(obj, args...);
+        }
+        template<typename... Args>
+        void addMatcher(MultiMatcher *obj, std::unique_ptr<libexpressions::MatcherImpl> const &impl, Args&& ...args) const {
+            this->addMatcher(obj, impl->clone());
+            this->addMatcher(obj, args...);
+        }
+        template<typename... Args>
+        void addMatcher(MultiMatcher *obj, Matcher const &matcher, Args&& ...args) const {
+            this->addMatcher(obj, matcher.getImpl()->clone());
+            this->addMatcher(obj, args...);
+        }
     public:
-        std::unique_ptr<libexpressions::MatcherImpl> operator()(std::vector<std::unique_ptr<libexpressions::MatcherImpl>> &&matcherVector) const {
+        template<typename T, std::enable_if_t<std::is_same_v<std::vector<std::unique_ptr<libexpressions::MatcherImpl>>, std::decay_t<T>>, bool> = true>
+        std::unique_ptr<libexpressions::MatcherImpl> operator()(T &&matchers) {
             auto obj = this->construct();
-            auto matcher = dynamic_cast<MultiMatcher*>(obj.get());
-            assert(matcher != nullptr);
-            for(auto &&submatcher : matcherVector) {
-                matcher->matchers.push_back(std::move(submatcher));
+            auto multimatcher = dynamic_cast<MultiMatcher*>(obj.get());
+            for(auto const &matcher : matchers) {
+                multimatcher->matchers.emplace_back(matcher->clone());
             }
             return obj;
         }
-        std::unique_ptr<libexpressions::MatcherImpl> operator()(std::vector<std::unique_ptr<libexpressions::MatcherImpl>> const &matcherVector) const {
+        template<typename T, std::enable_if_t<std::is_same_v<std::vector<Matcher>, std::decay_t<T>>, bool> = true>
+        std::unique_ptr<libexpressions::MatcherImpl> operator()(T &&matchers) {
             auto obj = this->construct();
-            auto matcher = dynamic_cast<MultiMatcher*>(obj.get());
-            assert(matcher != nullptr);
-            for(auto const &submatcher : matcherVector) {
-                matcher->matchers.push_back(submatcher->clone());
+            auto multimatcher = dynamic_cast<MultiMatcher*>(obj.get());
+            for(auto const &matcher : matchers) {
+                multimatcher->matchers.emplace_back(matcher.getImpl()->clone());
             }
             return obj;
         }
-        //template<typename ...Args>
-        //std::unique_ptr<libexpressions::MatcherImpl> operator()(Args&&... matcherArgs) const {
-        //    auto obj = this->construct();
-        //    auto matcher = dynamic_cast<MultiMatcher*>(obj.get());
-        //    assert(matcher != nullptr);
-        //    ((matcher->matchers.push_back(matcherArgs->clone())), ...);
-        //    return obj;
-        //}
+        template<typename ...Args>
+        std::unique_ptr<libexpressions::MatcherImpl> operator()(Args&&... matcherArgs) const {
+            auto obj = this->construct();
+            auto matcher = dynamic_cast<MultiMatcher*>(obj.get());
+            this->addMatcher(matcher, matcherArgs...);
+            return obj;
+        }
+
         virtual std::unique_ptr<MatcherImpl> clone() const override {
             auto val = libexpressions::MatcherImpl::clone();
             MultiMatcher *casted = static_cast<MultiMatcher*>(val.get());
@@ -113,8 +138,20 @@ namespace libexpressions::Matchers {
         using MatcherImpl::operator();
     };
     
-    MatcherConjunction And;
-    MatcherDisjunction Or;
-    MatcherNegation Not;
+    template<typename ...Args>
+    Matcher And(Args&& ...args) {
+        MatcherConjunction andImpl;
+        return andImpl(args...);
+    }
+    template<typename ...Args>
+    Matcher Or(Args&& ...args) {
+        MatcherDisjunction orImpl;
+        return orImpl(args...);
+    }
+    template<typename ...Args>
+    Matcher Not(Args&& ...args) {
+        MatcherNegation notImpl;
+        return notImpl(args...);
+    }
 }
 

@@ -60,7 +60,7 @@ namespace libexpressions::Matchers {
     };
 
     template<typename... Args>
-    std::unique_ptr<MatcherImpl> SatisfiesPredicate(Args&&...args) {
+    Matcher SatisfiesPredicate(Args&&...args) {
         PredicateMatcher matcher;
         return matcher(std::forward<Args>(args)...);
     }
