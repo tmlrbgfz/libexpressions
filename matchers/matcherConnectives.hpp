@@ -29,17 +29,10 @@
 namespace libexpressions::Matchers {
     class MultiMatcher : public libexpressions::MatcherImpl {
     protected:
+        void addMatcher(MultiMatcher *obj, std::unique_ptr<libexpressions::MatcherImpl> &&impl) const;
+        void addMatcher(MultiMatcher *obj, std::unique_ptr<libexpressions::MatcherImpl> const &impl) const;
+        void addMatcher(MultiMatcher *obj, Matcher const &matcher) const;
         std::vector<std::unique_ptr<libexpressions::MatcherImpl>> matchers;
-        void addMatcher(MultiMatcher *obj, std::unique_ptr<libexpressions::MatcherImpl> &&impl) const {
-            assert(obj != nullptr);
-            obj->matchers.emplace_back(std::move(impl));
-        }
-        void addMatcher(MultiMatcher *obj, std::unique_ptr<libexpressions::MatcherImpl> const &impl) const {
-            this->addMatcher(obj, impl->clone());
-        }
-        void addMatcher(MultiMatcher *obj, Matcher const &matcher) const {
-            this->addMatcher(obj, matcher.getImpl()->clone());
-        }
         template<typename... Args>
         void addMatcher(MultiMatcher *obj, std::unique_ptr<libexpressions::MatcherImpl> &&impl, Args&& ...args) const {
             obj->matchers.emplace_back(impl);
@@ -57,19 +50,19 @@ namespace libexpressions::Matchers {
         }
     public:
         template<typename T, std::enable_if_t<std::is_same_v<std::vector<std::unique_ptr<libexpressions::MatcherImpl>>, std::decay_t<T>>, bool> = true>
-        std::unique_ptr<libexpressions::MatcherImpl> operator()(T &&matchers) {
+        std::unique_ptr<libexpressions::MatcherImpl> operator()(T &&matchersToUse) {
             auto obj = this->construct();
             auto multimatcher = dynamic_cast<MultiMatcher*>(obj.get());
-            for(auto const &matcher : matchers) {
+            for(auto const &matcher : matchersToUse) {
                 multimatcher->matchers.emplace_back(matcher->clone());
             }
             return obj;
         }
         template<typename T, std::enable_if_t<std::is_same_v<std::vector<Matcher>, std::decay_t<T>>, bool> = true>
-        std::unique_ptr<libexpressions::MatcherImpl> operator()(T &&matchers) {
+        std::unique_ptr<libexpressions::MatcherImpl> operator()(T &&matchersToUse) {
             auto obj = this->construct();
             auto multimatcher = dynamic_cast<MultiMatcher*>(obj.get());
-            for(auto const &matcher : matchers) {
+            for(auto const &matcher : matchersToUse) {
                 multimatcher->matchers.emplace_back(matcher.getImpl()->clone());
             }
             return obj;
@@ -82,59 +75,30 @@ namespace libexpressions::Matchers {
             return obj;
         }
 
-        virtual std::unique_ptr<MatcherImpl> clone() const override {
-            auto val = libexpressions::MatcherImpl::clone();
-            MultiMatcher *casted = static_cast<MultiMatcher*>(val.get());
-            if(!matchers.empty()) {
-                for(auto const &m : this->matchers) {
-                    casted->matchers.push_back(m->clone());
-                }
-            }
-            return val;
-        }
+        std::unique_ptr<MatcherImpl> clone() const override;
     };
     class MatcherConjunction : public MultiMatcher {
     protected:
-        virtual std::unique_ptr<MatcherImpl> construct() const override {
-            return std::unique_ptr<MatcherImpl>(new MatcherConjunction);
-        }
+        std::unique_ptr<MatcherImpl> construct() const override;
     public:
-        virtual bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override {
-            for(auto &matcher : matchers) {
-                if(not matcher->operator()(ptr)) {
-                    return false;
-                }
-            }
-            return true;
-        }
+        bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override;
 
         using MultiMatcher::operator();
     };
     class MatcherDisjunction : public MultiMatcher {
     protected:
-        virtual std::unique_ptr<MatcherImpl> construct() const override {
-            return std::unique_ptr<MatcherImpl>(new MatcherDisjunction);
-        }
+        std::unique_ptr<MatcherImpl> construct() const override;
     public:
-        virtual bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override {
-            for(auto &matcher : matchers) {
-                if(matcher->operator()(ptr)) {
-                    return true;
-                }
-            }
-            return false;
-        }
+        bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override;
+
         using MultiMatcher::operator();
     };
     class MatcherNegation : public libexpressions::MatcherImpl {
     protected:
-        virtual std::unique_ptr<MatcherImpl> construct() const override {
-            return std::unique_ptr<MatcherImpl>(new MatcherNegation);
-        }
+        std::unique_ptr<MatcherImpl> construct() const override;
     public:
-        virtual bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override {
-            return nested->operator()(ptr) == false;
-        }
+        bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override;
+
         using MatcherImpl::operator();
     };
     

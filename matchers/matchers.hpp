@@ -40,50 +40,28 @@ namespace libexpressions {
     protected:
         std::unique_ptr<MatcherImpl> nested;
         virtual std::unique_ptr<MatcherImpl> construct() const = 0;
-        virtual std::unique_ptr<MatcherImpl> construct(std::unique_ptr<MatcherImpl> &&matcher) const {
-            auto val = this->construct();
-            val->nested = std::move(matcher);
-            return val;
-        }
+        virtual std::unique_ptr<MatcherImpl> construct(std::unique_ptr<MatcherImpl> &&matcher) const;
     public:
         virtual ~MatcherImpl() = default;
-        virtual std::unique_ptr<MatcherImpl> operator()(std::unique_ptr<MatcherImpl> &&matcher) const final {
-            return this->construct(std::move(matcher));
-        }
+        virtual std::unique_ptr<MatcherImpl> operator()(std::unique_ptr<MatcherImpl> &&matcher) const final;
         virtual std::unique_ptr<MatcherImpl> operator()(Matcher const &matcher) const final;
 
         virtual bool operator()(ExpressionNodePtr const &ptr) const = 0;
 
-        virtual std::unique_ptr<MatcherImpl> clone() const {
-            if(nested != nullptr) {
-                return this->construct(nested->clone());
-            } else {
-                return this->construct(std::unique_ptr<MatcherImpl>{});
-            }
-        }
+        virtual std::unique_ptr<MatcherImpl> clone() const;
     };
     class Matcher final {
     private:
         std::unique_ptr<MatcherImpl> matcher;
     public:
-        Matcher(std::unique_ptr<MatcherImpl> &&paramMatcher) : matcher(std::move(paramMatcher)) {}
-        Matcher(Matcher const &other) : matcher(other.matcher->clone()) {}
+        Matcher(std::unique_ptr<MatcherImpl> &&paramMatcher);
+        Matcher(Matcher const &other);
 
-        bool operator()(ExpressionNodePtr const &ptr) const {
-            return matcher->operator()(ptr);
-        }
-        Matcher operator()(Matcher const &other) const {
-            return { matcher->operator()(other.matcher->clone()) };
-        }
+        bool operator()(ExpressionNodePtr const &ptr) const;
+        Matcher operator()(Matcher const &other) const;
 
-        std::unique_ptr<MatcherImpl> const &getImpl() const {
-            return this->matcher;
-        }
+        std::unique_ptr<MatcherImpl> const &getImpl() const;
     };
-
-    std::unique_ptr<MatcherImpl> MatcherImpl::operator()(Matcher const &matcher) const {
-        return this->operator()(matcher.getImpl()->clone());
-    }
 
     // Invoke function `fn` on all expression nodes where a given matcher matches
     template<TreeTraversalOrder direction, typename Fn,

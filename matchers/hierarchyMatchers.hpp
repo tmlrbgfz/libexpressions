@@ -30,170 +30,67 @@ namespace libexpressions::Matchers {
     private:
         libexpressions::ExpressionNodePtr ref;
     protected:
-        virtual std::unique_ptr<MatcherImpl> construct() const override {
-            return std::unique_ptr<MatcherImpl>(new EqualityProperty(ref));
-        }
+        std::unique_ptr<MatcherImpl> construct() const override;
         EqualityProperty() = default;
     public:
-        EqualityProperty(libexpressions::ExpressionNodePtr const &ptr) : ref(ptr) {}
-        virtual bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override {
-            bool result = ptr->equal_to(this->ref.get());
-            return result;
-        }
+        EqualityProperty(libexpressions::ExpressionNodePtr const &ptr);
+        bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override;
     };
     class HasChildProperty : public MatcherImpl {
     protected:
-        virtual std::unique_ptr<MatcherImpl> construct() const override {
-            return std::unique_ptr<MatcherImpl>(new HasChildProperty);
-        }
+        std::unique_ptr<MatcherImpl> construct() const override;
     public:
-        virtual bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override {
-            if(dynamic_cast<libexpressions::Operator const*>(ptr.get()) != nullptr) {
-                libexpressions::Operator const *op = dynamic_cast<libexpressions::Operator const*>(ptr.get());
-                return std::any_of(op->begin(), op->end(), [this](libexpressions::ExpressionNodePtr const &child)->bool {
-                            return this->nested->operator()(child);
-                });
-            }
-            return false;
-        }
+        bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override;
     };
     class AllChildrenProperty : public MatcherImpl {
     protected:
-        virtual std::unique_ptr<MatcherImpl> construct() const override {
-            return std::unique_ptr<MatcherImpl>(new AllChildrenProperty);
-        }
+        std::unique_ptr<MatcherImpl> construct() const override;
     public:
-        virtual bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override {
-            if(dynamic_cast<libexpressions::Operator const*>(ptr.get()) != nullptr) {
-                libexpressions::Operator const *op = dynamic_cast<libexpressions::Operator const*>(ptr.get());
-                return std::all_of(op->begin(), op->end(), [this](libexpressions::ExpressionNodePtr const &child)->bool {
-                            return this->nested->operator()(child);
-                });
-            }
-            return false;
-        }
+        bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override;
     };
     class NthChildProperty : public MatcherImpl {
     private:
         size_t n;
     protected:
-        std::unique_ptr<MatcherImpl> construct() const override {
-            return std::unique_ptr<MatcherImpl>(new NthChildProperty(n));
-        }
+        std::unique_ptr<MatcherImpl> construct() const override;
     public:
-        NthChildProperty(size_t param) : n(param) {}
-        bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override {
-            if(dynamic_cast<libexpressions::Operator const*>(ptr.get()) != nullptr) {
-                libexpressions::Operator const *op = dynamic_cast<libexpressions::Operator const*>(ptr.get());
-                auto iter = op->begin();
-                std::advance(iter, static_cast<ssize_t>(n));
-                return this->nested->operator()(*iter);
-            }
-            return false;
-        }
+        NthChildProperty(size_t param);
+        bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override;
     };
     class AllExceptNthChildProperty : public MatcherImpl {
     private:
         size_t n;
     protected:
-        std::unique_ptr<MatcherImpl> construct() const override {
-            return std::unique_ptr<MatcherImpl>(new AllExceptNthChildProperty(n));
-        }
+        std::unique_ptr<MatcherImpl> construct() const override;
     public:
-        AllExceptNthChildProperty(size_t param) : n(param) {}
+        AllExceptNthChildProperty(size_t param);
 
-        bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override {
-            if(dynamic_cast<libexpressions::Operator const*>(ptr.get()) != nullptr) {
-                libexpressions::Operator const *op = dynamic_cast<libexpressions::Operator const*>(ptr.get());
-                size_t idx = 0;
-                for(auto iter = op->begin(); iter != op->end(); ++iter, ++idx) {
-                    if(idx != n and not this->nested->operator()(*iter)) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            return false;
-        }
+        bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override;
     };
 
     class KleeneProperty : public MatcherImpl {
     protected:
-        virtual std::unique_ptr<MatcherImpl> construct() const override {
-            return std::unique_ptr<MatcherImpl>(new KleeneProperty);
-        }
+        std::unique_ptr<MatcherImpl> construct() const override;
     public:
-        virtual bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override {
-            std::deque<libexpressions::ExpressionNodePtr> worklist;
-            worklist.push_back(ptr);
-            while(!worklist.empty()) {
-                libexpressions::ExpressionNodePtr node = worklist.front();
-                if(this->nested->operator()(node)) {
-                    return true;
-                }
-                if(dynamic_cast<libexpressions::Operator const*>(node.get()) != nullptr) {
-                    libexpressions::Operator const *op = dynamic_cast<libexpressions::Operator const*>(node.get());
-                    worklist.insert(worklist.end(), op->begin(), op->end());
-                }
-                worklist.pop_front();
-            }
-            return false;
-        }
+        bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override;
     };
     class AllChildrenRecurseProperty : public MatcherImpl {
     private:
         std::unique_ptr<MatcherImpl> invariantMatcher;
     protected:
-        virtual std::unique_ptr<MatcherImpl> construct() const override {
-            return std::unique_ptr<MatcherImpl>(new AllChildrenRecurseProperty(invariantMatcher->clone()));
-        }
+        std::unique_ptr<MatcherImpl> construct() const override;
     public:
-        AllChildrenRecurseProperty(std::unique_ptr<MatcherImpl> &&invariant) : invariantMatcher(std::move(invariant)) { }
-        virtual bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override {
-            if(this->nested->operator()(ptr)) {
-                return true;
-            } else if(auto op = dynamic_cast<libexpressions::Operator const*>(ptr.get());
-              op != nullptr ) {
-                if (this->invariantMatcher->operator()(ptr)) {
-                    for (auto const &child: *op) {
-                        if (not this->operator()(child)) {
-                            return false;
-                        }
-                    }
-                    return true;
-                }
-            }
-            return false;
-        }
+        AllChildrenRecurseProperty(std::unique_ptr<MatcherImpl> &&invariant);
+        bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override;
     };
     class DescendantProperty : public MatcherImpl {
     protected:
-        virtual std::unique_ptr<MatcherImpl> construct() const override {
-            return std::unique_ptr<MatcherImpl>(new DescendantProperty);
-        }
+        std::unique_ptr<MatcherImpl> construct() const override;
     public:
-        virtual bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override {
-            std::deque<libexpressions::ExpressionNodePtr> worklist;
-            worklist.push_back(ptr);
-            while(!worklist.empty()) {
-                libexpressions::ExpressionNodePtr node = worklist.front();
-                if(node != ptr && this->nested->operator()(node)) {
-                    return true;
-                }
-                if(dynamic_cast<libexpressions::Operator const*>(node.get()) != nullptr) {
-                    libexpressions::Operator const *op = dynamic_cast<libexpressions::Operator const*>(node.get());
-                    worklist.insert(worklist.end(), op->begin(), op->end());
-                }
-                worklist.pop_front();
-            }
-            return false;
-        }
+        bool operator()(libexpressions::ExpressionNodePtr const &ptr) const override;
     };
 
-    Matcher IsEqual(libexpressions::ExpressionNodePtr const &ptr) {
-        EqualityProperty x(ptr);
-        return x.clone();
-    }
+    Matcher IsEqual(libexpressions::ExpressionNodePtr const &ptr);
     template<typename... Args>
     Matcher HasChild(Args&& ...args) {
         HasChildProperty prop;
@@ -204,12 +101,8 @@ namespace libexpressions::Matchers {
         AllChildrenProperty prop;
         return prop(args...);
     }
-    Matcher HasNthChild(size_t n) {
-        return NthChildProperty(n).clone();
-    }
-    Matcher AllChildrenExceptNth(size_t n) {
-        return AllExceptNthChildProperty(n).clone();
-    }
+    Matcher HasNthChild(size_t n);
+    Matcher AllChildrenExceptNth(size_t n);
     template<typename... Args>
     Matcher ThisOrAnyChild(Args&& ...args) {
         KleeneProperty prop;
@@ -220,8 +113,6 @@ namespace libexpressions::Matchers {
         DescendantProperty prop;
         return prop(args...);
     }
-    Matcher RecursiveUntilProperty(Matcher const &invariantMatcher) {
-        return AllChildrenRecurseProperty(invariantMatcher.getImpl()->clone()).clone();
-    }
+    Matcher RecursiveUntilProperty(Matcher const &invariantMatcher);
 }
 

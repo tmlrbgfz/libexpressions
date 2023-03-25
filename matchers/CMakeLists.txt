@@ -1,11 +1,15 @@
-add_library(libexpressions_matchers INTERFACE)
+add_library(libexpressions_matchers OBJECT)
 
 target_sources(libexpressions_matchers
-    INTERFACE
+    PUBLIC
         hierarchyMatchers.hpp
         matcherConnectives.hpp
-        matchers.hpp)
+        matchers.hpp
+    PRIVATE
+        hierarchyMatchers.cpp
+        matcherConnectives.cpp
+        matchers.cpp)
 
-target_include_directories(libexpressions_matchers INTERFACE ${LIBEXPRESSIONS_INCLUDE_ROOT})
+target_include_directories(libexpressions_matchers PUBLIC ${LIBEXPRESSIONS_INCLUDE_ROOT})
 
 add_subdirectory(expressions)
