@@ -35,7 +35,7 @@
 
 namespace libexpressions {
 
-ExpressionNodePtr replaceSubexpressionsByEquality(ExpressionFactory *factory, ExpressionNodePtr const &expressionToReplaceIn, std::unordered_map<ExpressionNodePtr, ExpressionNodePtr> const &expressionReplacementMap) {
+inline ExpressionNodePtr replaceSubexpressionsByEquality(ExpressionFactory *factory, ExpressionNodePtr const &expressionToReplaceIn, std::unordered_map<ExpressionNodePtr, ExpressionNodePtr> const &expressionReplacementMap) {
     std::vector<Matcher> expressionMatchers;
     std::transform(expressionReplacementMap.cbegin(),
                    expressionReplacementMap.cend(),
