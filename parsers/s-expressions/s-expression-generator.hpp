@@ -52,7 +52,7 @@ std::string sExpressionToString(libexpressions::parsers::Expression<std::string>
             return std::visit(*this, op);
         }
     } childGetter;
-    auto printer = [&resultStack](auto const &node, auto const &/*path*/){
+    auto printer = [&resultStack](auto const &node){
         class printerHelper {
             public:
             std::vector<std::string> &resultStack;
@@ -80,7 +80,7 @@ std::string sExpressionToString(libexpressions::parsers::Expression<std::string>
         } printerObj(resultStack);
         return std::visit(printerObj, node);
     };
-    traverseTree<TreeTraversalOrder::POSTFIX_TRAVERSAL>(childGetter, printer, static_cast<Operand<std::string>>(input));
+    traverseTree<TreeTraversalOrder::POSTFIX_TRAVERSAL>(childGetter, printer, input);
     return resultStack.back();
 }
 
