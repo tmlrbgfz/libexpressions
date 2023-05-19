@@ -37,30 +37,32 @@ enum class TreeTraversalOrder {
     BREADTH_FIRST
 };
 
-template<typename Fn, typename NodeType>
-auto treeTraversalFunctionAdaptor(Fn &&fn, NodeType &&node, std::vector<std::size_t> const &/*path*/)
-->  std::enable_if_t<std::is_same_v<bool, std::decay_t<std::invoke_result_t<Fn(NodeType const&)>>>, bool>
+template<typename Fn, typename NodeType, typename Stack, typename StackPathCalculator>
+auto treeTraversalFunctionAdaptor(Fn &&fn, NodeType &&node, Stack &&/*stack*/, StackPathCalculator &&/*pathCalculator*/)
+->  std::enable_if_t<std::is_invocable_r_v<bool, Fn, NodeType>, bool>
 {
     return fn(node);
 }
-template<typename Fn, typename NodeType>
-auto treeTraversalFunctionAdaptor(Fn &&fn, NodeType &&node, std::vector<size_t> const &path)
-->  std::enable_if_t<std::is_same_v<bool, std::decay_t<std::invoke_result_t<Fn(NodeType const&, std::vector<size_t> const&)>>>, bool>
+template<typename Fn, typename NodeType, typename Stack, typename StackPathCalculator>
+auto treeTraversalFunctionAdaptor(Fn &&fn, NodeType &&node, Stack &&stack, StackPathCalculator &&pathCalculator)
+->  std::enable_if_t<std::is_invocable_r_v<bool, Fn, NodeType, std::vector<size_t> const &>, bool>
 {
-    return fn(node, path);
+    return fn(node, pathCalculator(stack));
 }
-template<typename Fn, typename NodeType>
-auto treeTraversalFunctionAdaptor(Fn &&fn, NodeType &&node, std::vector<size_t> const &/*path*/)
-->  std::enable_if_t<std::negation_v<std::is_same<bool, std::decay_t<std::invoke_result_t<Fn(NodeType)>>>>, bool>
+template<typename Fn, typename NodeType, typename Stack, typename StackPathCalculator>
+auto treeTraversalFunctionAdaptor(Fn &&fn, NodeType &&node, Stack &&/*stack*/, StackPathCalculator &&/*pathCalculator*/)
+->  std::enable_if_t<std::conjunction_v<std::is_invocable<Fn, NodeType>,
+                                        std::negation<std::is_invocable_r<bool, Fn, NodeType>>>, bool>
 {
-    return fn(node);
+    fn(node);
+    return true;
 }
-template<typename Fn, typename NodeType>
-bool treeTraversalFunctionAdaptor(Fn &&fn, NodeType &&node, std::vector<size_t> const &path)
-/*->  std::enable_if_t<std::negation_v<std::is_same<bool, std::decay_t<std::invoke_result_t<Fn(NodeType, 
-                                                        std::vector<size_t>)>>>>, bool>*/
+template<typename Fn, typename NodeType, typename Stack, typename StackPathCalculator>
+auto treeTraversalFunctionAdaptor(Fn &&fn, NodeType &&node, Stack &&stack, StackPathCalculator &&pathCalculator)
+->  std::enable_if_t<std::conjunction_v<std::is_invocable<Fn, NodeType, std::vector<size_t> const &>,
+                                        std::negation<std::is_invocable_r<bool, Fn, NodeType, std::vector<size_t> const &>>>, bool>
 {
-    fn(node, path);
+    fn(node, pathCalculator(stack));
     return true;
 }
 
@@ -86,7 +88,9 @@ std::vector<size_t> calculatePathFromStack(std::vector<std::tuple<NodePointer, I
 template<TreeTraversalOrder order,
          typename ChildIteratorGetterFunction,
          typename NodeFunction,
-         typename NodeType>
+         typename NodeType,
+         std::enable_if_t<std::disjunction_v<std::is_invocable<NodeFunction, NodeType const &>,
+                                             std::is_invocable<NodeFunction, NodeType const &, std::vector<size_t>>>, bool> = true>
 void traverseTree(ChildIteratorGetterFunction &&childGetter,
                   NodeFunction &&functionToCall,
                   NodeType const &paramTopNode) {
@@ -94,7 +98,9 @@ void traverseTree(ChildIteratorGetterFunction &&childGetter,
     if constexpr ( order != TreeTraversalOrder::BREADTH_FIRST ) {
 
         auto [childrenBeginOfRoot, childrenEndOfRoot] = childGetter(paramTopNode);
-        typedef std::tuple<NodePointer, std::decay_t<decltype(childrenBeginOfRoot)>, std::decay_t<decltype(childrenEndOfRoot)>> StackFrame;
+        typedef std::decay_t<decltype(childrenBeginOfRoot)> IIterator1;
+        typedef std::decay_t<decltype(childrenEndOfRoot)> IIterator2;
+        typedef std::tuple<NodePointer, IIterator1, IIterator2> StackFrame;
 
         std::vector<StackFrame> stack;
         stack.emplace_back(&paramTopNode, childrenBeginOfRoot, childrenEndOfRoot);
@@ -102,7 +108,7 @@ void traverseTree(ChildIteratorGetterFunction &&childGetter,
         if constexpr ( order == TreeTraversalOrder::PREFIX_TRAVERSAL 
                     or (order == TreeTraversalOrder::INFIX_TRAVERSAL
                        and childrenBeginOfRoot == childrenEndOfRoot) ) {
-            if( not treeTraversalFunctionAdaptor(functionToCall, paramTopNode, calculatePathFromStack(stack))) {
+            if( not treeTraversalFunctionAdaptor(functionToCall, paramTopNode, stack, calculatePathFromStack<NodePointer, IIterator1, IIterator2>)) {
                 return;
             }
         }
@@ -119,20 +125,20 @@ void traverseTree(ChildIteratorGetterFunction &&childGetter,
                 if constexpr ( order == TreeTraversalOrder::PREFIX_TRAVERSAL 
                             or (order == TreeTraversalOrder::INFIX_TRAVERSAL
                                and nextChildrenBegin == nextChildrenEnd) ) {
-                    if( not treeTraversalFunctionAdaptor(functionToCall, *nextTop, calculatePathFromStack(stack))) {
+                    if( not treeTraversalFunctionAdaptor(functionToCall, *nextTop, stack, calculatePathFromStack<NodePointer, IIterator1, IIterator2>)) {
                         return;
                     }
                 }
             } else {
                 if constexpr ( order == TreeTraversalOrder::POSTFIX_TRAVERSAL ) {
-                    if( not treeTraversalFunctionAdaptor(functionToCall, *stackTopNode, calculatePathFromStack(stack))) {
+                    if( not treeTraversalFunctionAdaptor(functionToCall, *stackTopNode, stack, calculatePathFromStack<NodePointer, IIterator1, IIterator2>)) {
                         return;
                     }
                 }
                 stack.pop_back();
                 if constexpr ( order == TreeTraversalOrder::INFIX_TRAVERSAL ) {
                     auto &[topNode, childrenBegin, childrenEnd] = stack.back();
-                    if( not treeTraversalFunctionAdaptor(functionToCall, *topNode, calculatePathFromStack(stack))) {
+                    if( not treeTraversalFunctionAdaptor(functionToCall, *topNode, stack, calculatePathFromStack<NodePointer, IIterator1, IIterator2>)) {
                         return;
                     }
                 }
@@ -145,7 +151,7 @@ void traverseTree(ChildIteratorGetterFunction &&childGetter,
         while( not workQueue.empty() ) {
             auto [node, path] = workQueue.front();
 
-            if( not treeTraversalFunctionAdaptor(functionToCall(*node, path)) ) {
+            if( not treeTraversalFunctionAdaptor(functionToCall, *node, path, [](auto const &x) { return x; }) ) {
                 return;
             }
 
