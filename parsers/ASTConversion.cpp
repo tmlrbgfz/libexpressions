@@ -42,7 +42,7 @@ static std::vector<T> stackToVector(std::stack<T> &&stack) {
         reverseResult.emplace_back(std::move(stack.top()));
         stack.pop();
     }
-    std::vector<T> result(reverseResult.rbegin(), reverseResult.rend());
+    std::vector<T> result(std::move_iterator(reverseResult.rbegin()), std::move_iterator(reverseResult.rend()));
     return result;
 }
 
@@ -203,7 +203,7 @@ ExpressionList<std::string>   generateASTFromExpressions(std::vector<libexpressi
         } else if(state.top() == OPERATOR_UP) {
             stOperators.emplace(Operator<std::string>());
             while(not stOperands.top().empty()) {
-                stOperators.top().operands.push_back(stOperands.top().top());
+                stOperators.top().operands.emplace_back(std::move(stOperands.top().top()));
                 stOperands.top().pop();
             }
             stOperands.pop();

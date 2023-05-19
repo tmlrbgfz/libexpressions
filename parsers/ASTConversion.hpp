@@ -24,6 +24,7 @@
 
 #include <string>
 #include "libexpressions/expressions/expression_node.hpp"
+#include "libexpressions/parsers/ast.hpp"
 
 namespace libexpressions {
     class ExpressionFactory;
