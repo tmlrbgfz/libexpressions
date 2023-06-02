@@ -29,6 +29,7 @@
 #include <vector>
 #include <algorithm>
 #include <mutex>
+#include <shared_mutex>
 #include <optional>
 #include <cassert>
 #include <iostream>
@@ -38,11 +39,10 @@ namespace IHT {
     class IHTFactory {
     private: //private typedefs
         typedef typename IHT::IHTNodePtr<NodeType>::weak_type IHTWeakNodePtr;
-        typedef std::vector<typename IHT::IHTFactory<NodeType>::IHTWeakNodePtr> IHTWeakNodePtrContainer;
+        typedef typename IHT::IHTNode<NodeType> const * IHTNodePtr;
+        typedef std::vector<std::tuple<IHTNodePtr, typename IHT::IHTFactory<NodeType>::IHTWeakNodePtr>> IHTWeakNodePtrContainer;
     private: //private member functions
         //Not thread safe
-        template<typename SpecialisedType, typename Deleter>
-        std::optional<IHT::IHTNodePtr<NodeType>> insertNode(std::unique_ptr<SpecialisedType, Deleter> &&node);
         template<typename SpecialisedType, typename Deleter>
         IHT::IHTNodePtr<NodeType> findOrInsertNode(std::unique_ptr<SpecialisedType, Deleter> &&node);
 
@@ -61,47 +61,86 @@ namespace IHT {
 
         void unregisterNode(IHT::IHTNode<NodeType> *node) {
             auto const hash = node->hash();
-            auto &[ptrs] = nodes[hash];
+            std::shared_lock<std::shared_mutex> nodesLock(this->nodesMutex);
+            auto &[ptrs, hashMutex] = nodes[hash];
+            std::unique_lock<std::shared_mutex> hashLock(hashMutex);
             for(typename IHT::IHTFactory<NodeType>::IHTWeakNodePtrContainer::iterator iter = ptrs.begin();
                 iter != ptrs.end(); ++iter) {
+                auto &[ptr, weakPtr] = *iter;
                 //If the node is in here or if there is a nullptr
                 //  Note: The order for weak_ptr expiration and deleter call is undefined by the current standards. (https://cplusplus.github.io/LWG/issue2751)
                 //        Therefore, the weak_ptr we are looking for can either still be locked and return the pointer to the node or will be expired.
                 //        Thus, we erase the correct weak_ptr if we find it or any nullptr's we find on the way.
-                if(iter->expired()) {
+                if(ptr == node or weakPtr.expired()) {
                     ptrs.erase(iter);
-                    break; // We expect all nodes to call this function on deletion, so there should be at most one expired node.
-                } else {
-                    auto existingPtr = iter->lock();
-                    if(existingPtr.get() == node) {
-                        // Erase the weak ptr from the container
-                        ptrs.erase(iter);
-                        assert(not this->hasEquivalentNode(node));
-                        break; // We expect all nodes to call this function on deletion, so there should be at most one expired node.
+                    break;
+                }
+            }
+            hashLock.unlock();
+            if(ptrs.empty()) {
+                nodesLock.unlock(); //Unlocking to lock unique to modify node hash map
+                // Here, we assume anything can happen and someone else might
+                // insert another node with this hash or delete this element of
+                // the node hash map.
+                std::unique_lock<std::shared_mutex> exclusiveNodesLock(this->nodesMutex);
+                // We need to check everything again and assume, the node hash
+                // map has been modified.
+                if(nodes.count(hash) > 0) {
+                    auto &[ptrsExcl, hashExcl] = nodes.at(hash);
+                    std::unique_lock<std::shared_mutex> exclusiveHashLock(hashExcl);
+                    if(ptrsExcl.empty()) {
+                        nodes.erase(hash);
+                        // Hash mutex has been erased, just release it
+                        exclusiveHashLock.release();
                     }
                 }
             }
-            if(ptrs.empty()) {
-                nodes.erase(hash);
-                assert(nodes.count(hash) == 0);
-            }
         }
 
-        std::optional<IHT::IHTNodePtr<NodeType>> findEquivalentNode(IHT::IHTNode<NodeType> const *node) const {
+        std::optional<IHT::IHTNodePtr<NodeType>> findEquivalentNodeAssumeLocked(IHT::IHTNode<NodeType> const *node) const {
             if(node == nullptr) {
                 return std::nullopt;
             }
-            if(nodes.count(node->hash()) > 0) {
-                auto &[nodesWithThisHash] = nodes.at(node->hash());
+            auto const hash = node->hash();
+            if(nodes.count(hash) > 0) {
+                auto &[nodesWithThisHash, hashMutex] = nodes.at(hash);
                 auto found = std::find_if(nodesWithThisHash.cbegin(),
                                    nodesWithThisHash.cend(),
-                                   [&node](auto const &weakPtrNode) {
-                    auto ptr = weakPtrNode.lock();
-                    assert(ptr);
-                    return node->equal_to(ptr.get());
+                                   [&node](auto const &ptrNode) {
+                    auto &[ptr, weakPtr] = ptrNode;
+                    return not weakPtr.expired() and node->equal_to(ptr);
                 });
                 if(found != nodesWithThisHash.cend()) {
-                    return found->lock();
+                    auto &[_, weakPtr] = *found;
+                    return weakPtr.lock();
+                }
+            }
+            return std::nullopt;
+        }
+
+        // Doing the same as `findEquivalentNodeAssumeLocked` but with mutex
+        // locking. Not just locking in this function and then calling
+        // `findEquivalentNodeAssumeLocked` could be considered a performance
+        // optimisation but is at most a minor one. Doing it anyways and
+        // leaving this comment.
+        std::optional<IHT::IHTNodePtr<NodeType>> findEquivalentNode(IHT::IHTNode<NodeType> const *node) {
+            if(node == nullptr) {
+                return std::nullopt;
+            }
+            auto const hash = node->hash();
+            std::shared_lock<std::shared_mutex> nodesLock(this->nodesMutex);
+            if(nodes.count(hash) > 0) {
+                auto &[nodesWithThisHash, hashMutex] = nodes.at(hash);
+                std::shared_lock<std::shared_mutex> hashLock(hashMutex);
+                auto found = std::find_if(nodesWithThisHash.cbegin(),
+                                   nodesWithThisHash.cend(),
+                                   [&node](auto const &ptrNode) {
+                    auto &[ptr, weakPtr] = ptrNode;
+                    return not weakPtr.expired() and node->equal_to(ptr);
+                });
+                if(found != nodesWithThisHash.cend()) {
+                    auto &[_, weakPtr] = *found;
+                    return weakPtr.lock();
                 }
             }
             return std::nullopt;
@@ -109,7 +148,8 @@ namespace IHT {
     private: //private members
         static std::unique_ptr<IHT::IHTFactory<NodeType>> singletonInstance;
 
-        std::unordered_map<IHT::hash_type, std::tuple<IHTWeakNodePtrContainer>> nodes;
+        std::unordered_map<IHT::hash_type, std::tuple<IHTWeakNodePtrContainer, std::shared_mutex>> nodes;
+        std::shared_mutex nodesMutex;
     public:
         static IHTFactory<NodeType> *get() {
             if(singletonInstance == nullptr) {
@@ -145,7 +185,7 @@ namespace IHT {
             static_assert(std::is_base_of<NodeType, SpecialisedType>::value == true, "IHTFactory cannot create objects of types not derived from IHTNode.");
 
             //Create a node with the given arguments
-            return this->insertNode(std::unique_ptr<SpecialisedType, deleter_type<Deleter>>(new SpecialisedType(std::forward<Args>(args)...),
+            return this->findOrInsertNode(std::unique_ptr<SpecialisedType, deleter_type<Deleter>>(new SpecialisedType(std::forward<Args>(args)...),
                                     this->getNodeDeleter(std::forward<Deleter>(deleter))));
         }
 
@@ -165,10 +205,10 @@ namespace IHT {
                                           this->getNodeDeleter(std::forward<Deleter>(deleter))));
         }
 
-        bool hasEquivalentNode(IHT::IHTNode<NodeType> const *node) const {
+        bool hasEquivalentNode(IHT::IHTNode<NodeType> const *node) {
             return this->findEquivalentNode(node).has_value();
         }
-        bool hasEquivalentNode(IHT::IHTNodePtr<NodeType> const &node) const {
+        bool hasEquivalentNode(IHT::IHTNodePtr<NodeType> const &node) {
             return this->hasEquivalentNode(node.get());
         }
     };
@@ -182,39 +222,25 @@ namespace IHT {
         if(node == nullptr) {
             return nullptr;
         }
-        auto ptrToNode = node.get();
-        // insertNode only inserts, if an equivalent node is not already present
-        // If there was a node inserted, return the pointer given by
-        // insertNode. If we were to discard the pointer, the object would be
-        // destroyed immediately.
-        if(auto inserted = this->insertNode(std::move(node));
-            inserted.has_value()) {
-            return inserted.value();
-        } else {
-            // There was an equivalent node.
-            // Find and return an equivalent node.
-            return this->findEquivalentNode(ptrToNode).value();
-        }
-    }
-    // Implementation of long methods from class template
-    template<typename NodeType>
-    template<typename SpecialisedType, typename Deleter>
-    std::optional<IHT::IHTNodePtr<NodeType>> IHTFactory<NodeType>::insertNode(std::unique_ptr<SpecialisedType, Deleter> &&node) {
-        if(node == nullptr) {
-            return nullptr;
-        }
         //If no node was found, insert the created node into the node map
         //and return the pointer
-        if(not this->hasEquivalentNode(node.get())) {
+        if(auto eqNode = this->findEquivalentNode(node.get());
+            not eqNode.has_value()) {
             IHT::IHTNodePtr<NodeType> toInsert(node.get(), node.get_deleter());
             node.release();
-            auto &[ptrs] = nodes[toInsert->hash()];
-            ptrs.emplace_back(toInsert);
-            assert(this->hasEquivalentNode(toInsert));
+            auto const hash = toInsert->hash();
+            std::unique_lock<std::shared_mutex> nodesLock(this->nodesMutex);
+            auto &[ptrs, hashMutex] = nodes[hash];
+            {
+                std::unique_lock<std::shared_mutex> hashLock(hashMutex);
+                if(not this->findEquivalentNodeAssumeLocked(node.get()).has_value()) {
+                    ptrs.emplace_back(toInsert.get(), toInsert);
+                }
+            }
+            assert(this->findEquivalentNodeAssumeLocked(toInsert.get()).has_value());
             return toInsert;
         } else {
-            assert(this->hasEquivalentNode(node.get()));
-            return std::nullopt;
+            return eqNode.value();
         }
     }
 }

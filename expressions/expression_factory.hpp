@@ -164,6 +164,7 @@ namespace libexpressions {
             traverseTree<TreeTraversalOrder::POSTFIX_TRAVERSAL>(getChildrenIteratorsForExpressionNode,
                                                                 reproducer,
                                                                 expressionToReproduce);
+            assert(data.value() == expressionToReproduce);
             return data.value();
         }
 
