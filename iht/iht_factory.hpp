@@ -185,8 +185,15 @@ namespace IHT {
             static_assert(std::is_base_of<NodeType, SpecialisedType>::value == true, "IHTFactory cannot create objects of types not derived from IHTNode.");
 
             //Create a node with the given arguments
-            return this->findOrInsertNode(std::unique_ptr<SpecialisedType, deleter_type<Deleter>>(new SpecialisedType(std::forward<Args>(args)...),
+            auto newNodePtr = new SpecialisedType(std::forward<Args>(args)...);
+            //Create a node with the given arguments
+            auto inserted = this->findOrInsertNode(std::unique_ptr<SpecialisedType, deleter_type<Deleter>>(newNodePtr,
                                     this->getNodeDeleter(std::forward<Deleter>(deleter))));
+            if(newNodePtr == inserted.get()) {
+                return inserted;
+            } else {
+                return std::nullopt;
+            }
         }
 
         //Constructors and destructors of NodeType should not have side effects
