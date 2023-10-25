@@ -27,6 +27,7 @@
 #include <deque>
 #include <type_traits>
 #include <cstdlib>
+#include <cassert>
 
 namespace libexpressions {
 
@@ -70,18 +71,17 @@ template<typename NodePointer>
 size_t getChildNodeIndex(NodePointer parent, NodePointer child);
 
 template<typename NodePointer, typename IIterator1, typename IIterator2>
-std::vector<size_t> calculatePathFromStack(std::vector<std::tuple<NodePointer, IIterator1, IIterator2>> const &stack) {
+std::vector<size_t> calculatePathFromStack(std::vector<std::tuple<NodePointer, IIterator1, IIterator2, size_t>> const &stack) {
     std::vector<size_t> result;
     if(not stack.empty()) {
         result.reserve(stack.size()-1);
         NodePointer previousNode = std::get<0>(stack.at(0));
-        for(auto &[ptr, _ignore0, _ignore1] : stack) {
-            if(previousNode != ptr) { // root is on stack, we want to ignore it
-                result.push_back(getChildNodeIndex(previousNode, ptr));
-            }
+        for(auto &[ptr, _ignore0, _ignore1, index] : stack) {
+            result.push_back(index - 1);
             previousNode = ptr;
         }
     }
+    result.pop_back();
     return result;
 }
 
@@ -100,10 +100,11 @@ void traverseTree(ChildIteratorGetterFunction &&childGetter,
         auto [childrenBeginOfRoot, childrenEndOfRoot] = childGetter(paramTopNode);
         typedef std::decay_t<decltype(childrenBeginOfRoot)> IIterator1;
         typedef std::decay_t<decltype(childrenEndOfRoot)> IIterator2;
-        typedef std::tuple<NodePointer, IIterator1, IIterator2> StackFrame;
+        // Last is index of next node to visit in the frames child nodes (IIterator1 + size_t)
+        typedef std::tuple<NodePointer, IIterator1, IIterator2, size_t> StackFrame;
 
         std::vector<StackFrame> stack;
-        stack.emplace_back(&paramTopNode, childrenBeginOfRoot, childrenEndOfRoot);
+        stack.emplace_back(&paramTopNode, childrenBeginOfRoot, childrenEndOfRoot, 0);
 
         if constexpr ( order == TreeTraversalOrder::PREFIX_TRAVERSAL 
                     or (order == TreeTraversalOrder::INFIX_TRAVERSAL
@@ -114,18 +115,18 @@ void traverseTree(ChildIteratorGetterFunction &&childGetter,
         }
 
         while(not stack.empty()) {
-            auto &[stackTopNode, stackChildrenBegin, stackChildrenEnd] = stack.back();
+            auto &[stackTopNode, stackChildrenBegin, stackChildrenEnd, indexTop] = stack.back();
             
-            if( stackChildrenBegin != stackChildrenEnd ) {
-                auto nextTop = &*stackChildrenBegin;
-                ++stackChildrenBegin;
-                auto [nextChildrenBegin, nextChildrenEnd] = childGetter(*nextTop);
-                stack.emplace_back(nextTop, nextChildrenBegin, nextChildrenEnd);
+            if( auto nextChildIter = stackChildrenBegin + indexTop; nextChildIter != stackChildrenEnd ) {
+                auto nextChild = &*nextChildIter;
+                ++indexTop;
+                auto [nextChildrenBegin, nextChildrenEnd] = childGetter(*nextChild);
+                stack.emplace_back(nextChild, nextChildrenBegin, nextChildrenEnd, 0);
 
                 if constexpr ( order == TreeTraversalOrder::PREFIX_TRAVERSAL 
                             or (order == TreeTraversalOrder::INFIX_TRAVERSAL
                                and nextChildrenBegin == nextChildrenEnd) ) {
-                    if( not treeTraversalFunctionAdaptor(functionToCall, *nextTop, stack, calculatePathFromStack<NodePointer, IIterator1, IIterator2>)) {
+                    if( not treeTraversalFunctionAdaptor(functionToCall, *nextChild, stack, calculatePathFromStack<NodePointer, IIterator1, IIterator2>)) {
                         return;
                     }
                 }
@@ -137,7 +138,7 @@ void traverseTree(ChildIteratorGetterFunction &&childGetter,
                 }
                 stack.pop_back();
                 if constexpr ( order == TreeTraversalOrder::INFIX_TRAVERSAL ) {
-                    auto &[topNode, childrenBegin, childrenEnd] = stack.back();
+                    auto &[topNode, childrenBegin, childrenEnd, index] = stack.back();
                     if( not treeTraversalFunctionAdaptor(functionToCall, *topNode, stack, calculatePathFromStack<NodePointer, IIterator1, IIterator2>)) {
                         return;
                     }
