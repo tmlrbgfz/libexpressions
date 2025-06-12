@@ -146,17 +146,19 @@ void traverseTree(ChildIteratorGetterFunction &&childGetter,
             }
         }
     } else {
-        std::deque<NodePointer, std::vector<NodePointer>> workQueue;
-        workQueue.emplace_back(&paramTopNode, {});
+        using Path = std::vector<NodePointer>;
+        std::deque<std::tuple<NodePointer, Path>> workQueue;
+        workQueue.emplace_back(std::tuple<NodePointer, Path>(&paramTopNode, Path{}));
 
         while( not workQueue.empty() ) {
             auto [node, path] = workQueue.front();
+            workQueue.pop_front();
 
             if( not treeTraversalFunctionAdaptor(functionToCall, *node, path, [](auto const &x) { return x; }) ) {
                 return;
             }
 
-            auto [childrenBegin, childrenEnd] = childGetter(node);
+            auto [childrenBegin, childrenEnd] = childGetter(*node);
             path.push_back(node);
             for(auto iter = childrenBegin; iter != childrenEnd; ++iter) {
                 workQueue.emplace_back(&*iter, path);
