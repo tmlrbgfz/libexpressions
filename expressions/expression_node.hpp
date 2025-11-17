@@ -42,6 +42,7 @@ namespace libexpressions {
 
         void accept(ExpressionVisitor *visitor) const;
 
+        [[deprecated("Use ASTConversion and representation_conversion interfaces instead.")]]
         std::string toString() const;
 
         constexpr kind_type getKind() const {
@@ -60,5 +61,10 @@ namespace libexpressions {
     typedef std::shared_ptr<ExpressionNode const> ExpressionNodePtr;
 
     typedef std::vector<ExpressionNodePtr> ExpressionNodePtrContainer;
+
+    namespace representation {
+        class ExpressionRepresentationInterface;
+    }
+    std::string toString(ExpressionNodePtr const expression, representation::ExpressionRepresentationInterface const *representationInterface);
 }
 

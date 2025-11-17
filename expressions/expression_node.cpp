@@ -23,6 +23,8 @@
 #include "libexpressions/expressions/expression_node.hpp"
 
 #include "libexpressions/expressions/expression_visit_helper.hpp"
+#include "libexpressions/representation_conversion/ASTConversion.hpp"
+#include "libexpressions/representation_conversion/ExpressionRepresentationInterface.hpp"
 
 
 namespace libexpressions {
@@ -49,6 +51,11 @@ namespace libexpressions {
         return libexpressions::visit(this, [node](auto thisNode) {
             return thisNode->equal_to(node);
         });
+    }
+
+    std::string toString(ExpressionNodePtr const ptr, representation::ExpressionRepresentationInterface const *representationInterface) {
+        auto exprList = libexpressions::representation::generateASTFromExpressions(std::vector<libexpressions::ExpressionNodePtr>{ptr});
+        return representationInterface->expressionListToString(exprList);
     }
 }
 

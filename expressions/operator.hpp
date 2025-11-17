@@ -77,6 +77,7 @@ namespace libexpressions {
             return hashCache;
         }
 
+        [[deprecated("Use ASTConversion and representation_conversion interfaces instead.")]]
         std::string toString() const {
             std::string result = "(";
             if(this->operands.size() > 0) {

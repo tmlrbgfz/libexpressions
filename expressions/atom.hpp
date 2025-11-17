@@ -52,6 +52,7 @@ namespace libexpressions {
             return symHash;
         }
 
+        [[deprecated("Use ASTConversion and representation_conversion interfaces instead.")]]
         std::string toString() const {
             return symbol;
         }
