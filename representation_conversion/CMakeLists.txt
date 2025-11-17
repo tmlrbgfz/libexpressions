@@ -11,4 +11,3 @@ target_sources(libexpressions_representation
 target_include_directories(libexpressions_representation PRIVATE ${LIBEXPRESSIONS_INCLUDE_ROOT})
 
 add_subdirectory(s-expressions)
-add_subdirectory(infix-expressions)
