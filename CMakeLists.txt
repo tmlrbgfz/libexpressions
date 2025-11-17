@@ -40,4 +40,5 @@ target_link_libraries(expressions
         libexpressions_matchers
         libexpressions_representation
         libexpressions_representation_sexpressions
+        libexpressions_representation_infixexpressions
         libexpressions_utils)
