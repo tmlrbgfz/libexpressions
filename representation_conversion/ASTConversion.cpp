@@ -26,14 +26,14 @@
 #include "libexpressions/expressions/expression_factory.hpp"
 #include "libexpressions/expressions/operator.hpp"
 #include "libexpressions/expressions/atom.hpp"
-#include "libexpressions/parsers/ast.hpp"
-#include "libexpressions/parsers/ExpressionRepresentationInterface.hpp"
+#include "libexpressions/representation_conversion/ast.hpp"
+#include "libexpressions/representation_conversion/ExpressionRepresentationInterface.hpp"
 #include <cassert>
 #include <stack>
 #include <memory>
 #include <iostream>
 
-namespace libexpressions::parsers {
+namespace libexpressions::representation {
 
 template<typename T>
 static std::vector<T> stackToVector(std::stack<T> &&stack) {
@@ -47,7 +47,7 @@ static std::vector<T> stackToVector(std::stack<T> &&stack) {
 }
 
 std::vector<libexpressions::ExpressionNodePtr>
-generateExpressionListFromAST(libexpressions::ExpressionFactory *factory, libexpressions::parsers::ExpressionList<std::string>   const &exp) {
+generateExpressionListFromAST(libexpressions::ExpressionFactory *factory, libexpressions::representation::ExpressionList<std::string>   const &exp) {
     std::stack<Operand<std::string>> stOperands;
     std::stack<Operator<std::string>> stOperators;
     std::stack<AtomicProposition<std::string>> stAtoms;
@@ -229,8 +229,12 @@ ExpressionList<std::string>   generateASTFromExpressions(std::vector<libexpressi
     return stackToVector(std::move(stOperands.top()));
 }
 
-std::vector<libexpressions::ExpressionNodePtr> generateExpressionsFromString(libexpressions::ExpressionFactory *factory, libexpressions::parsers::ExpressionRepresentationInterface const* eri, std::string const &string) {
+std::vector<libexpressions::ExpressionNodePtr> generateExpressionsFromString(libexpressions::ExpressionFactory *factory, libexpressions::representation::ExpressionRepresentationInterface const* eri, std::string const &string) {
     return generateExpressionListFromAST(factory, eri->stringToExpressionList(string));
+}
+
+std::string generateStringFromExpressions(ExpressionRepresentationInterface const *eri, std::vector<libexpressions::ExpressionNodePtr> const &expressions) {
+    return eri->expressionListToString(generateASTFromExpressions(expressions));
 }
 
 

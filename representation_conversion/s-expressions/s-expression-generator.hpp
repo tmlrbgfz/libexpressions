@@ -26,19 +26,19 @@
 #include <algorithm>
 
 #include "libexpressions/utils/tree-visit.hpp"
-#include "libexpressions/parsers/ast.hpp"
+#include "libexpressions/representation_conversion/ast.hpp"
 
 namespace libexpressions {
 
 template<>
-size_t getChildNodeIndex(libexpressions::parsers::Operand<std::string> const *parent, libexpressions::parsers::Operand<std::string> const *child) {
-    auto const &operands = std::get<libexpressions::parsers::Operator<std::string>>(*parent).operands;
+size_t getChildNodeIndex(libexpressions::representation::Operand<std::string> const *parent, libexpressions::representation::Operand<std::string> const *child) {
+    auto const &operands = std::get<libexpressions::representation::Operator<std::string>>(*parent).operands;
     return static_cast<size_t>(std::distance(operands.cbegin(), std::find(operands.cbegin(), operands.cend(), *child)));
 }
 
-namespace parsers {
+namespace representation {
 
-std::string sExpressionToString(libexpressions::parsers::Expression<std::string> const &input) {
+std::string sExpressionToString(libexpressions::representation::Expression<std::string> const &input) {
     std::vector<std::string> resultStack;
     struct {
         typedef std::vector<Operand<std::string>>::const_iterator Iterator;

@@ -29,7 +29,7 @@ add_subdirectory(expressions)
 add_subdirectory(evaluators)
 add_subdirectory(iht)
 add_subdirectory(matchers)
-add_subdirectory(parsers)
+add_subdirectory(representation_conversion)
 add_subdirectory(utils)
 
 target_link_libraries(expressions
@@ -38,6 +38,6 @@ target_link_libraries(expressions
         libexpressions_evaluators
         libexpressions_iht
         libexpressions_matchers
-        libexpressions_parsers
-        libexpressions_parsers_sexpressions
+        libexpressions_representation
+        libexpressions_representation_sexpressions
         libexpressions_utils)

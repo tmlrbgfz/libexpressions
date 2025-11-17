@@ -23,14 +23,37 @@
 #pragma once
 
 #include <string>
-#include "libexpressions/expressions/expression_node.hpp"
-#include "libexpressions/parsers/ast.hpp"
+#include <vector>
+#include <variant>
 
-namespace libexpressions {
-    class ExpressionFactory;
+namespace libexpressions::representation {
 
-    namespace parsers {
-        libexpressions::parsers::ExpressionList<std::string> parseSExpressions(std::string const &str);
+template<typename T>
+using AtomicProposition = T;
+
+template<typename T>
+struct Operator_t;
+
+template<typename T>
+using Operator = struct Operator_t<T>;
+
+template<typename T>
+using Operand = std::variant<AtomicProposition<T>, Operator<T>>;
+
+template<typename T>
+struct Operator_t {
+    std::vector<Operand<T>> operands;
+
+    bool operator==(struct Operator_t<T> const &other) const {
+        return this->operands == other.operands;
     }
+};
+
+template<typename T>
+using Expression = Operand<T>;
+
+template<typename T>
+using ExpressionList = std::vector<Expression<T>>;
+
 }
 

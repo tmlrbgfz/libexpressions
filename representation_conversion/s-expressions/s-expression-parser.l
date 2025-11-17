@@ -29,9 +29,9 @@
 #include <stdexcept>
 #include <system_error>
 
-#include "libexpressions/parsers/ast.hpp"
-#include "libexpressions/parsers/ASTConversion.hpp"
-#include "libexpressions/parsers/s-expressions/s-expression-parser.hpp"
+#include "libexpressions/representation_conversion/ast.hpp"
+#include "libexpressions/representation_conversion/ASTConversion.hpp"
+#include "libexpressions/representation_conversion/s-expressions/s-expression-parser.hpp"
 #include "s-expression-parser.tab.hpp"
 #define YYSTYPE LIBEXPRESSIONS_S_EXPRESSIONSTYPE
 
@@ -55,20 +55,20 @@ WHITESPACE [ \t\n]+
 
 %%
 
-{IDENTIFIER} { yylval->atom = new libexpressions::parsers::AtomicProposition<std::string>(std::string(yytext, yyleng)); return IDENTIFIER; }
+{IDENTIFIER} { yylval->atom = new libexpressions::representation::AtomicProposition<std::string>(std::string(yytext, yyleng)); return IDENTIFIER; }
 {WHITESPACE} { }
 . { return static_cast<unsigned char>(*yytext); }
 
 %%
 
-void libexpressions_s_expressionerror(libexpressions::parsers::ExpressionList<std::string> &/*result*/, std::string &errorString, yyscan_t /*scanner*/, char const *str) {
+void libexpressions_s_expressionerror(libexpressions::representation::ExpressionList<std::string> &/*result*/, std::string &errorString, yyscan_t /*scanner*/, char const *str) {
 		errorString = str;
 }
 
-namespace libexpressions::parsers {
+namespace libexpressions::representation {
 
-libexpressions::parsers::ExpressionList<std::string> parseSExpressions(std::string const &input) {
-		libexpressions::parsers::ExpressionList<std::string> result;
+libexpressions::representation::ExpressionList<std::string> parseSExpressions(std::string const &input) {
+		libexpressions::representation::ExpressionList<std::string> result;
 		std::string errorString;
 		yyscan_t scanner;
 		if(yylex_init(&scanner)) {

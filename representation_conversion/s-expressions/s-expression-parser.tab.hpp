@@ -74,11 +74,11 @@ union LIBEXPRESSIONS_S_EXPRESSIONSTYPE
 {
 #line 41 "s-expression-parser.y"
 
-	libexpressions::parsers::AtomicProposition<std::string> *atom;
-	libexpressions::parsers::Operand<std::string> *operand;
-	std::vector<libexpressions::parsers::Operand<std::string>> *operandList;
-	libexpressions::parsers::Operator<std::string> *oprtr;
-	std::vector<libexpressions::parsers::Operator<std::string>> *operatorList;
+	libexpressions::representation::AtomicProposition<std::string> *atom;
+	libexpressions::representation::Operand<std::string> *operand;
+	std::vector<libexpressions::representation::Operand<std::string>> *operandList;
+	libexpressions::representation::Operator<std::string> *oprtr;
+	std::vector<libexpressions::representation::Operator<std::string>> *operatorList;
 
 #line 84 "s-expression-parser.tab.hpp"
 
@@ -91,7 +91,7 @@ typedef union LIBEXPRESSIONS_S_EXPRESSIONSTYPE LIBEXPRESSIONS_S_EXPRESSIONSTYPE;
 
 
 
-int libexpressions_s_expressionparse (libexpressions::parsers::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner);
+int libexpressions_s_expressionparse (libexpressions::representation::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner);
 
 
 #endif /* !YY_LIBEXPRESSIONS_S_EXPRESSION_S_EXPRESSION_PARSER_TAB_HPP_INCLUDED  */

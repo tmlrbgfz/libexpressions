@@ -26,24 +26,24 @@
 %{
 #include <vector>
 #include <stdexcept>
-#include "libexpressions/parsers/ast.hpp"
+#include "libexpressions/representation_conversion/ast.hpp"
 
 typedef void* yyscan_t;
-#include "libexpressions/parsers/s-expressions/s-expression-parser.tab.hpp"
-#include "libexpressions/parsers/s-expressions/s-expression-parser.lex.hpp"
+#include "libexpressions/representation_conversion/s-expressions/s-expression-parser.tab.hpp"
+#include "libexpressions/representation_conversion/s-expressions/s-expression-parser.lex.hpp"
 
-void libexpressions_s_expressionerror(libexpressions::parsers::ExpressionList<std::string>&, std::string&, yyscan_t, char const*);
+void libexpressions_s_expressionerror(libexpressions::representation::ExpressionList<std::string>&, std::string&, yyscan_t, char const*);
 
 %}
 
 /* Declarations */
 
 %union {
-	libexpressions::parsers::AtomicProposition<std::string> *atom;
-	libexpressions::parsers::Operand<std::string> *operand;
-	std::vector<libexpressions::parsers::Operand<std::string>> *operandList;
-	libexpressions::parsers::Operator<std::string> *oprtr;
-	std::vector<libexpressions::parsers::Operator<std::string>> *operatorList;
+	libexpressions::representation::AtomicProposition<std::string> *atom;
+	libexpressions::representation::Operand<std::string> *operand;
+	std::vector<libexpressions::representation::Operand<std::string>> *operandList;
+	libexpressions::representation::Operator<std::string> *oprtr;
+	std::vector<libexpressions::representation::Operator<std::string>> *operatorList;
 }
 
 %token <atom> IDENTIFIER
@@ -59,17 +59,17 @@ void libexpressions_s_expressionerror(libexpressions::parsers::ExpressionList<st
 %define parse.error detailed
 %define api.prefix {libexpressions_s_expression}
 %define api.pure full
-%parse-param {libexpressions::parsers::ExpressionList<std::string> &result} {std::string &errorString}
+%parse-param {libexpressions::representation::ExpressionList<std::string> &result} {std::string &errorString}
 %param {yyscan_t yyscanner}
 
 %%
 
 /* Grammar */
-OPERAND: IDENTIFIER { $OPERAND = new libexpressions::parsers::Operand<std::string>(*$IDENTIFIER); delete $IDENTIFIER; }
-			 | OPERATOR { $OPERAND = new libexpressions::parsers::Operand<std::string>(*$OPERATOR); delete $OPERATOR; }
+OPERAND: IDENTIFIER { $OPERAND = new libexpressions::representation::Operand<std::string>(*$IDENTIFIER); delete $IDENTIFIER; }
+			 | OPERATOR { $OPERAND = new libexpressions::representation::Operand<std::string>(*$OPERATOR); delete $OPERATOR; }
 OPERANDLIST[result]: OPERANDLIST[list] OPERAND { $result = $list; $result->push_back(std::move(*$OPERAND)); delete $OPERAND; }
-									 | %empty { $result = new std::vector<libexpressions::parsers::Operand<std::string>>(); }
-OPERATOR: '(' OPERANDLIST ')' { $OPERATOR = new libexpressions::parsers::Operator<std::string>(); $OPERATOR->operands = std::move(*$OPERANDLIST); delete $OPERANDLIST; }
+									 | %empty { $result = new std::vector<libexpressions::representation::Operand<std::string>>(); }
+OPERATOR: '(' OPERANDLIST ')' { $OPERATOR = new libexpressions::representation::Operator<std::string>(); $OPERATOR->operands = std::move(*$OPERANDLIST); delete $OPERANDLIST; }
 RESULT: OPERANDLIST { result = std::move(*$OPERANDLIST); delete $OPERANDLIST; }
 
 %%

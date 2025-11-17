@@ -23,37 +23,22 @@
 #pragma once
 
 #include <string>
-#include <vector>
-#include <variant>
+#include "libexpressions/expressions/expression_node.hpp"
+#include "libexpressions/representation_conversion/ast.hpp"
 
-namespace libexpressions::parsers {
+namespace libexpressions {
+    class ExpressionFactory;
+    namespace representation {
+        class ExpressionRepresentationInterface;
+        // AST -> Expressions
+        std::vector<libexpressions::ExpressionNodePtr> generateExpressionListFromAST(libexpressions::ExpressionFactory *factory, libexpressions::representation::ExpressionList<std::string>   const &exp);
+        // Expressions -> AST
+        libexpressions::representation::ExpressionList<std::string> generateASTFromExpressions(std::vector<libexpressions::ExpressionNodePtr> const &exp);
 
-template<typename T>
-using AtomicProposition = T;
-
-template<typename T>
-struct Operator_t;
-
-template<typename T>
-using Operator = struct Operator_t<T>;
-
-template<typename T>
-using Operand = std::variant<AtomicProposition<T>, Operator<T>>;
-
-template<typename T>
-struct Operator_t {
-    std::vector<Operand<T>> operands;
-
-    bool operator==(struct Operator_t<T> const &other) const {
-        return this->operands == other.operands;
+        // string -> AST -> Expressions
+        std::vector<libexpressions::ExpressionNodePtr> generateExpressionsFromString(libexpressions::ExpressionFactory *factory, ExpressionRepresentationInterface const* eri, std::string const &string);
+        // Expressions -> AST -> string
+        std::string generateStringFromExpressions(ExpressionRepresentationInterface const *eri, std::vector<libexpressions::ExpressionNodePtr> const &expressions);
     }
-};
-
-template<typename T>
-using Expression = Operand<T>;
-
-template<typename T>
-using ExpressionList = std::vector<Expression<T>>;
-
 }
 

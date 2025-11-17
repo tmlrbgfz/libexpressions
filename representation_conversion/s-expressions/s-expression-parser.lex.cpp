@@ -673,9 +673,9 @@ static const flex_int16_t yy_chk[13] =
 #include <stdexcept>
 #include <system_error>
 
-#include "libexpressions/parsers/ast.hpp"
-#include "libexpressions/parsers/ASTConversion.hpp"
-#include "libexpressions/parsers/s-expressions/s-expression-parser.hpp"
+#include "libexpressions/representation_conversion/ast.hpp"
+#include "libexpressions/representation_conversion/ASTConversion.hpp"
+#include "libexpressions/representation_conversion/s-expressions/s-expression-parser.hpp"
 #include "s-expression-parser.tab.hpp"
 #define YYSTYPE LIBEXPRESSIONS_S_EXPRESSIONSTYPE
 
@@ -1018,7 +1018,7 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 YY_RULE_SETUP
 #line 58 "s-expression-parser.l"
-{ yylval->atom = new libexpressions::parsers::AtomicProposition<std::string>(std::string(yytext, yyleng)); return IDENTIFIER; }
+{ yylval->atom = new libexpressions::representation::AtomicProposition<std::string>(std::string(yytext, yyleng)); return IDENTIFIER; }
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
@@ -2182,14 +2182,14 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 #line 62 "s-expression-parser.l"
 
 
-void libexpressions_s_expressionerror(libexpressions::parsers::ExpressionList<std::string> &/*result*/, std::string &errorString, yyscan_t /*scanner*/, char const *str) {
+void libexpressions_s_expressionerror(libexpressions::representation::ExpressionList<std::string> &/*result*/, std::string &errorString, yyscan_t /*scanner*/, char const *str) {
 		errorString = str;
 }
 
-namespace libexpressions::parsers {
+namespace libexpressions::representation {
 
-libexpressions::parsers::ExpressionList<std::string> parseSExpressions(std::string const &input) {
-		libexpressions::parsers::ExpressionList<std::string> result;
+libexpressions::representation::ExpressionList<std::string> parseSExpressions(std::string const &input) {
+		libexpressions::representation::ExpressionList<std::string> result;
 		std::string errorString;
 		yyscan_t scanner;
 		if(yylex_init(&scanner)) {

@@ -77,13 +77,13 @@
 
 #include <vector>
 #include <stdexcept>
-#include "libexpressions/parsers/ast.hpp"
+#include "libexpressions/representation_conversion/ast.hpp"
 
 typedef void* yyscan_t;
-#include "libexpressions/parsers/s-expressions/s-expression-parser.tab.hpp"
-#include "libexpressions/parsers/s-expressions/s-expression-parser.lex.hpp"
+#include "libexpressions/representation_conversion/s-expressions/s-expression-parser.tab.hpp"
+#include "libexpressions/representation_conversion/s-expressions/s-expression-parser.lex.hpp"
 
-void libexpressions_s_expressionerror(libexpressions::parsers::ExpressionList<std::string>&, std::string&, yyscan_t, char const*);
+void libexpressions_s_expressionerror(libexpressions::representation::ExpressionList<std::string>&, std::string&, yyscan_t, char const*);
 
 
 #line 90 "s-expression-parser.tab.cpp"
@@ -653,7 +653,7 @@ do {                                                                      \
 
 static void
 yy_symbol_value_print (FILE *yyo,
-                       yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, libexpressions::parsers::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner)
+                       yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, libexpressions::representation::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner)
 {
   FILE *yyoutput = yyo;
   YY_USE (yyoutput);
@@ -674,7 +674,7 @@ yy_symbol_value_print (FILE *yyo,
 
 static void
 yy_symbol_print (FILE *yyo,
-                 yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, libexpressions::parsers::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner)
+                 yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, libexpressions::representation::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner)
 {
   YYFPRINTF (yyo, "%s %s (",
              yykind < YYNTOKENS ? "token" : "nterm", yysymbol_name (yykind));
@@ -713,7 +713,7 @@ do {                                                            \
 
 static void
 yy_reduce_print (yy_state_t *yyssp, YYSTYPE *yyvsp,
-                 int yyrule, libexpressions::parsers::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner)
+                 int yyrule, libexpressions::representation::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner)
 {
   int yylno = yyrline[yyrule];
   int yynrhs = yyr2[yyrule];
@@ -1239,7 +1239,7 @@ yysyntax_error (YYPTRDIFF_T *yymsg_alloc, char **yymsg,
 
 static void
 yydestruct (const char *yymsg,
-            yysymbol_kind_t yykind, YYSTYPE *yyvaluep, libexpressions::parsers::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner)
+            yysymbol_kind_t yykind, YYSTYPE *yyvaluep, libexpressions::representation::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner)
 {
   YY_USE (yyvaluep);
   YY_USE (result);
@@ -1264,7 +1264,7 @@ yydestruct (const char *yymsg,
 `----------*/
 
 int
-yyparse (libexpressions::parsers::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner)
+yyparse (libexpressions::representation::ExpressionList<std::string> &result, std::string &errorString, yyscan_t yyscanner)
 {
 /* Lookahead token kind.  */
 int yychar;
@@ -1536,13 +1536,13 @@ yyreduce:
       {
   case 2: /* OPERAND: IDENTIFIER  */
 #line 68 "s-expression-parser.y"
-                    { (yyval.operand) = new libexpressions::parsers::Operand<std::string>(*(yyvsp[0].atom)); delete (yyvsp[0].atom); }
+                    { (yyval.operand) = new libexpressions::representation::Operand<std::string>(*(yyvsp[0].atom)); delete (yyvsp[0].atom); }
 #line 1541 "s-expression-parser.tab.cpp"
     break;
 
   case 3: /* OPERAND: OPERATOR  */
 #line 69 "s-expression-parser.y"
-                                    { (yyval.operand) = new libexpressions::parsers::Operand<std::string>(*(yyvsp[0].oprtr)); delete (yyvsp[0].oprtr); }
+                                    { (yyval.operand) = new libexpressions::representation::Operand<std::string>(*(yyvsp[0].oprtr)); delete (yyvsp[0].oprtr); }
 #line 1547 "s-expression-parser.tab.cpp"
     break;
 
@@ -1554,13 +1554,13 @@ yyreduce:
 
   case 5: /* OPERANDLIST: %empty  */
 #line 71 "s-expression-parser.y"
-                                                                                  { (yyval.operandList) = new std::vector<libexpressions::parsers::Operand<std::string>>(); }
+                                                                                  { (yyval.operandList) = new std::vector<libexpressions::representation::Operand<std::string>>(); }
 #line 1559 "s-expression-parser.tab.cpp"
     break;
 
   case 6: /* OPERATOR: '(' OPERANDLIST ')'  */
 #line 72 "s-expression-parser.y"
-                              { (yyval.oprtr) = new libexpressions::parsers::Operator<std::string>(); (yyval.oprtr)->operands = std::move(*(yyvsp[-1].operandList)); delete (yyvsp[-1].operandList); }
+                              { (yyval.oprtr) = new libexpressions::representation::Operator<std::string>(); (yyval.oprtr)->operands = std::move(*(yyvsp[-1].operandList)); delete (yyvsp[-1].operandList); }
 #line 1565 "s-expression-parser.tab.cpp"
     break;
 

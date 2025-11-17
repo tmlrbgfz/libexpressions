@@ -25,16 +25,16 @@
 
 #include <string>
 
-#include "libexpressions/parsers/ast.hpp"
+#include "libexpressions/representation_conversion/ast.hpp"
 
-namespace libexpressions::parsers {
+namespace libexpressions::representation {
 
 class ExpressionRepresentationInterface {
 public:
     virtual ~ExpressionRepresentationInterface() { };
 
-    virtual libexpressions::parsers::ExpressionList<std::string> stringToExpressionList(std::string const&) const = 0;
-    virtual std::string expressionListToString(libexpressions::parsers::ExpressionList<std::string> const&) const = 0;
+    virtual libexpressions::representation::ExpressionList<std::string> stringToExpressionList(std::string const&) const = 0;
+    virtual std::string expressionListToString(libexpressions::representation::ExpressionList<std::string> const&) const = 0;
 };
 
 }
