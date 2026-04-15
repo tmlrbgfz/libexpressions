@@ -50,7 +50,7 @@
 
 /* Regexes */
 
-IDENTIFIER [_a-zA-Z!%&/=?+*<>@.,0-9'\-^]+
+IDENTIFIER [^)( \t\n]+
 WHITESPACE [ \t\n]+
 
 %%
